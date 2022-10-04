@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Union
+from typing import Union, List, Tuple
 
 from indentprinter import IndentPrinter
 from torchWork.loss_weight_tree import LossWeightTree
@@ -18,32 +18,33 @@ class LossLogger:
 
     def __write(
         self, file, epoch_i, lossRoot: Loss, 
-        lossWeightTree, grad_norm, 
+        lossWeightTree, extras, 
     ):
         def p(*a, **kw):
             print(*a, file=file, **kw)
         p('Finished epoch', epoch_i, ':',)
         with IndentPrinter(p, 2 * ' ') as p:
             self.dfs(p, lossRoot, lossWeightTree)
-            if grad_norm is not None:
-                p('grad_norm', '=', grad_norm)
+            if extras is not None:
+                for key, value in extras:
+                    p(key, '=', value)
     
     def eat(
-        self, epoch_i: int, lossRoot: Loss, 
-        lossWeightTree: LossWeightTree, 
-        grad_norm=None,
+        self, epoch_i: int, 
+        lossRoot: Loss, lossWeightTree: LossWeightTree, 
+        extras: List[Tuple[str, float]]=None, 
         verbose=True, 
     ):
         if self.filename is not None:
             with open(self.filename, 'a') as f:
                 self.__write(
                     f, epoch_i, lossRoot, 
-                    lossWeightTree, grad_norm, 
+                    lossWeightTree, extras, 
                 )
         if verbose and epoch_i % self.print_every == 0:
             self.__write(
                 sys.stdout, epoch_i, lossRoot, 
-                lossWeightTree, grad_norm, 
+                lossWeightTree, extras, 
             )
             sys.stdout.flush()
 

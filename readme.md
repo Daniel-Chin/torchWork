@@ -23,4 +23,4 @@ Add two trees to get another tree.
 ### Loss logging & plotting
 - Log the losses as trees in .txt files.  
 - Plot the losses.  
-- You can also log grad_norm.  
+- You can log extra info such as grad_norm.  
