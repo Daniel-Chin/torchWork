@@ -25,6 +25,9 @@ class LossTree:
     def sum(self, lossWeightTree: LossWeightTree):
         acc = 0
         for lossWeightNode in lossWeightTree.children:
+            if lossWeightNode.weight == 0:
+                # Allow compute-skipped losses to be None
+                continue
             child: Union[LossTree, float] = self.__getattribute__(
                 lossWeightNode.name, 
             )
