@@ -1,0 +1,15 @@
+Save experiment with repo commit hash and config file
+exp group management
+
+Future works
+    continue train
+
+Don't add
+    .sbatch
+
+Done
+LossTree
+HyperParams
+Profiling
+    with goodTime:
+        ... # e.g. backward()

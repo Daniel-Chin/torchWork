@@ -1,0 +1,23 @@
+# torchWork
+A framework / toolkit for deep learning projects using pyTorch.  
+
+Features: 
+- Losses as trees.  
+- Loss logging & plotting.  
+- Keeping track of hyper parameters.  
+- Experiment management.  
+  - Vary hyper parameters to generate experiment groups.  
+  - Archive hyper parameters & git commit hash for reproducibility.  
+  - Time-base round robin across experiment groups.  
+- Profiler.  
+
+## Example usage
+...
+
+## Features
+### Losses as trees
+
+### Loss logging & plotting
+- Log the losses as trees in .txt files.  
+- Plot the losses.  
+- You can also log grad_norm.  
