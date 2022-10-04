@@ -16,6 +16,9 @@ Features:
 
 ## Features
 ### Losses as trees
+Meta programming. Reasons...  
+Sum using weights.  
+Add two trees to get another tree.  
 
 ### Loss logging & plotting
 - Log the losses as trees in .txt files.  

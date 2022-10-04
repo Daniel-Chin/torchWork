@@ -20,7 +20,7 @@ class AbstractLossNode:
 class Loss:
     def __init__(self):
         self.name: str = None
-        # self.children: List[str] = None
+        self.children: List[str] = None
     
     def sum(self, lossWeightTree: LossWeightTree):
         acc = 0
@@ -36,6 +36,15 @@ class Loss:
                     lossWeightNode, 
                 )
         return acc
+    
+    def __add__(self, other: Loss):
+        new = self.__class__()
+        for child in self.children:
+            new.__setattr__(child, (
+                self .__getattribute__(child) + 
+                other.__getattribute__(child)
+            ))
+        return new
 
 def writeCode(file, root: AbstractLossNode):
     def p(*a, **kw):
@@ -61,18 +70,18 @@ def dfs(p, node: AbstractLossNode):
         with IndentPrinter(p) as p:
             p('super().__init__()')
             p(f"self.name = '{node.name}'")
-            # names = []
+            names = []
             for child in node.children:
                 if isinstance(child, AbstractLossNode):
-                    # names.append(child.name)
+                    names.append(child.name)
                     p('self.%s: __class__.%s = __class__.%s()' % (
                         child.name, child.class_name, child.class_name, 
                     ))
                 else:
-                    # names.append(child)
+                    names.append(child)
                     p('self.%s: float = None' % child)
-            # p('self.children = [', end='')
-            # for name in names:
-            #     p(f"'{name}', ", end='')
-            # p(']')
+            p('self.children = [', end='')
+            for name in names:
+                p(f"'{name}', ", end='')
+            p(']')
     p()

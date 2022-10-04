@@ -73,6 +73,7 @@ def main():
 
     lossLogger = LossLogger('losses.log')
     lossLogger.eat(0, total_loss, hyperParams.loss_weight_tree)
+    lossLogger.eat(1, total_loss + total_loss, hyperParams.loss_weight_tree)
 
     profiler = Profiler()
     for i in range(4):
