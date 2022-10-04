@@ -4,7 +4,7 @@ from typing import Union, List, Tuple
 
 from indentprinter import IndentPrinter
 from torchWork.loss_weight_tree import LossWeightTree
-from torchWork.loss_tree import Loss
+from torchWork.loss_tree import LossTree
 
 class LossLogger:
     def __init__(
@@ -17,7 +17,7 @@ class LossLogger:
         self.print_every = print_every
 
     def __write(
-        self, file, epoch_i, lossRoot: Loss, 
+        self, file, epoch_i, lossRoot: LossTree, 
         lossWeightTree, extras, 
     ):
         def p(*a, **kw):
@@ -31,7 +31,7 @@ class LossLogger:
     
     def eat(
         self, epoch_i: int, 
-        lossRoot: Loss, lossWeightTree: LossWeightTree, 
+        lossRoot: LossTree, lossWeightTree: LossWeightTree, 
         extras: List[Tuple[str, float]]=None, 
         verbose=True, 
     ):
@@ -48,13 +48,13 @@ class LossLogger:
             )
             sys.stdout.flush()
 
-    def dfs(self, p, loss: Loss, lossWeightTree: LossWeightTree):
+    def dfs(self, p, loss: LossTree, lossWeightTree: LossWeightTree):
         p(loss.name, '=', loss.sum(lossWeightTree))
         with IndentPrinter(p, 2 * ' ') as p:
             for lossWeightNode in lossWeightTree.children:
                 name = lossWeightNode.name
                 lossChild: Union[
-                    Loss, float, 
+                    LossTree, float, 
                 ] = loss.__getattribute__(name)
                 if lossWeightNode.children is None:
                     p(name, '=', lossChild)

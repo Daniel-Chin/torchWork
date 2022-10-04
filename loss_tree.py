@@ -6,7 +6,7 @@ from typing import List, Union
 from indentprinter import IndentPrinter
 from torchWork.loss_weight_tree import LossWeightTree
 
-__all__ = ['Loss', 'AbstractLossNode', 'writeCode']
+__all__ = ['LossTree', 'AbstractLossNode', 'writeCode']
 
 class AbstractLossNode:
     def __init__(
@@ -17,7 +17,7 @@ class AbstractLossNode:
 
         self.class_name = name[0].upper() + name[1:]
 
-class Loss:
+class LossTree:
     def __init__(self):
         self.name: str = None
         self.children: List[str] = None
@@ -25,7 +25,7 @@ class Loss:
     def sum(self, lossWeightTree: LossWeightTree):
         acc = 0
         for lossWeightNode in lossWeightTree.children:
-            child: Union[Loss, float] = self.__getattribute__(
+            child: Union[LossTree, float] = self.__getattribute__(
                 lossWeightNode.name, 
             )
             if lossWeightNode.children is None:
@@ -37,7 +37,7 @@ class Loss:
                 )
         return acc
     
-    def __add__(self, other: Loss):
+    def __add__(self, other: LossTree):
         new = self.__class__()
         for child in self.children:
             new.__setattr__(child, (
@@ -55,12 +55,12 @@ def writeCode(file, root: AbstractLossNode):
     p('# Do not modify!')
     p('# Git ignore this!')
     p()
-    p(f'from torchWork import Loss')
+    p(f'from torchWork import LossTree')
     p()
     dfs(p, root)
 
 def dfs(p, node: AbstractLossNode):
-    p(f'class {node.class_name}(Loss):')
+    p(f'class {node.class_name}(LossTree):')
     with IndentPrinter(p) as p:
         for child in node.children:
             if isinstance(child, AbstractLossNode):
