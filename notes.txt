@@ -3,6 +3,7 @@ exp group management
 
 Future works
     continue train
+    batch vs minibatch
 
 Don't add
     .sbatch
