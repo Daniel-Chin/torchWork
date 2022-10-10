@@ -115,6 +115,3 @@ def decompressToText(input_filename: str, output: TextIO):
 
 def previewLosses(filename):
     decompressToText(filename, sys.stdout)
-
-if __name__ == '__main__':
-    previewLosses()
