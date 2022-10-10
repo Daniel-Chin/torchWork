@@ -29,14 +29,3 @@ class Profiler:
         score = self.acc_good_time / t
         print('Profiler: Good time makes', format(score, '.0%'))
         return score
-
-class GoodTime:
-    def __init__(self, profiler: Profiler) -> None:
-        self.profiler = profiler
-    
-    def __enter__(self):
-        self.start = perf_counter()
-    
-    def __exit__(self, type, value, traceback):
-        dt = perf_counter() - self.start
-        return False
