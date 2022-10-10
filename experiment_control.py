@@ -109,7 +109,9 @@ def runExperiment(
     shutil.copy(current_experiment_path, path.join(
         exp_path, 'experiment.py', 
     ))
-    with open('commit_hash.txt', 'w') as f:
+    with open(path.join(
+        exp_path, 'commit_hash.txt', 
+    ), 'w') as f:
         print(getCommitHash(), file=f)
     
     trainers = []
