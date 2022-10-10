@@ -79,7 +79,7 @@ class Compressor:
             f.write(struct.pack('!I', batch_i))
             f.write(struct.pack('!?', train_or_validate))
             for value in self.buffered_values:
-                f.write(struct.pack('!f', value))
+                f.write(struct.pack('!f', value or 0.0))
         self.buffered_keys  .clear()
         self.buffered_values.clear()
     
@@ -96,12 +96,12 @@ def Decompressor(filename: str):
             data = f.read(4)
             if data == b'':
                 break
-            epoch_i           = struct.unpack('!I', data)
-            batch_i           = struct.unpack('!I', f.read(4))
-            train_or_validate = struct.unpack('!?', f.read(1))
+            epoch_i           = struct.unpack('!I', data)[0]
+            batch_i           = struct.unpack('!I', f.read(4))[0]
+            train_or_validate = struct.unpack('!?', f.read(1))[0]
             entries: Dict[str, float] = {}
             for key in keys:
-                entries[key] = struct.unpack('!f', f.read(4))
+                entries[key] = struct.unpack('!f', f.read(4))[0]
             yield epoch_i, batch_i, train_or_validate, entries
 
 def decompressToText(input_filename: str, output: TextIO):
