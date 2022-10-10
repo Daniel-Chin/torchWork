@@ -99,3 +99,4 @@ def writeLosses():
 
 if __name__ == '__main__':
     main()
+    print('For a more complete demo, see https://github.com/Daniel-Chin/3S/tree/main/bounce_clean')

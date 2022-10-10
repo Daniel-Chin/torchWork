@@ -5,3 +5,6 @@ from torchWork.loss_logger import LossLogger
 from torchWork.hyper_params import BaseHyperParams
 from torchWork.profiler import Profiler
 from torchWork.device import *
+from torchWork.experiment_control import (
+    ExperimentGroup, runExperiment, 
+)
