@@ -19,7 +19,7 @@ class LossWeightTree:
         raise KeyError(f'{key} not found.')
     
     def getWeight(self, epoch: int):
-        if isinstance(self.weight, float):
-            return self.weight
-        else:
+        try:
             return self.weight(epoch)
+        except TypeError:
+            return self.weight
