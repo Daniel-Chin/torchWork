@@ -71,9 +71,10 @@ def main():
     total_loss.weight_decay = 6
     print('loss sum:', total_loss.sum(hyperParams.loss_weight_tree, epoch=0))
 
-    lossLogger = LossLogger('losses.log')
-    lossLogger.eat(0, total_loss, hyperParams.loss_weight_tree)
-    lossLogger.eat(1, total_loss + total_loss, hyperParams.loss_weight_tree)
+    lossLogger = LossLogger('losses.torchworklosslog')
+    lossLogger.clearFile()
+    lossLogger.eat(0, 0, True, total_loss, hyperParams.loss_weight_tree)
+    lossLogger.eat(0, 1, True, total_loss + total_loss, hyperParams.loss_weight_tree)
 
     profiler = Profiler()
     for i in range(4):
