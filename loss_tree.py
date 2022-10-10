@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import List, Union
 
+import torch
+
 from indentprinter import IndentPrinter
 from torchWork.loss_weight_tree import LossWeightTree
 
@@ -22,21 +24,24 @@ class LossTree:
         self.name: str = None
         self.children: List[str] = None
     
-    def sum(self, lossWeightTree: LossWeightTree):
-        acc = 0
+    def sum(self, lossWeightTree: LossWeightTree, epoch: int):
+        acc = torch.tensor(0)
         for lossWeightNode in lossWeightTree.children:
-            if lossWeightNode.weight == 0:
+            weight = lossWeightNode.getWeight(epoch)
+            if weight == 0:
                 # Allow compute-skipped losses to be None
                 continue
-            child: Union[LossTree, float] = self.__getattribute__(
+            child: Union[LossTree, torch.Tensor] = self.__getattribute__(
                 lossWeightNode.name, 
             )
             if lossWeightNode.children is None:
-                acc += lossWeightNode.weight * child
+                assert isinstance(child, torch.Tensor)
+                acc += weight * child
             else:
                 assert len(lossWeightNode.children)
-                acc += lossWeightNode.weight * child.sum(
-                    lossWeightNode, 
+                assert isinstance(child, LossTree)
+                acc += weight * child.sum(
+                    lossWeightNode, epoch, 
                 )
         return acc
     
