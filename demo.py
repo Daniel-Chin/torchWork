@@ -69,7 +69,7 @@ def main():
     total_loss.vrnn.predict.image = 4
     total_loss.vrnn.kld = 5
     total_loss.weight_decay = 6
-    print('loss sum:', total_loss.sum(hyperParams.loss_weight_tree))
+    print('loss sum:', total_loss.sum(hyperParams.loss_weight_tree, epoch=0))
 
     lossLogger = LossLogger('losses.log')
     lossLogger.eat(0, total_loss, hyperParams.loss_weight_tree)
