@@ -24,8 +24,10 @@ class LossTree:
         self.name: str = None
         self.children: List[str] = None
     
-    def sum(self, lossWeightTree: LossWeightTree, epoch: int):
-        acc = torch.tensor(0)
+    def sum(
+        self, lossWeightTree: LossWeightTree, epoch: int, 
+    ):
+        acc = torch.tensor(0, dtype=torch.float32)
         for lossWeightNode in lossWeightTree.children:
             weight = lossWeightNode.getWeight(epoch)
             if weight == 0:
@@ -35,7 +37,7 @@ class LossTree:
                 lossWeightNode.name, 
             )
             if lossWeightNode.children is None:
-                assert isinstance(child, torch.Tensor)
+                assert isinstance(child, (torch.Tensor, float, int))
                 acc += weight * child
             else:
                 assert len(lossWeightNode.children)
@@ -51,6 +53,14 @@ class LossTree:
             new.__setattr__(child, (
                 self .__getattribute__(child) + 
                 other.__getattribute__(child)
+            ))
+        return new
+
+    def __div__(self, other: float):
+        new = self.__class__()
+        for child in self.children:
+            new.__setattr__(child, (
+                self.__getattribute__(child) / other
             ))
         return new
 
