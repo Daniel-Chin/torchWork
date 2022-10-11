@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import torch.utils.data
 from torch import nn
-from torchWork import BaseHyperParams, LossLogger, Profiler
+from torchWork import BaseHyperParams, LossLogger, Profiler, DEVICE
 import git
 
 class ExperimentGroup(ABC):
@@ -119,7 +119,7 @@ def runExperiment(
         for rand_init_i in range(n_rand_inits):
             models = {}
             for name, ModelClass in modelClasses.items():
-                models[name] = ModelClass(group.hyperParams)
+                models[name] = ModelClass(group.hyperParams).to(DEVICE)
             trainer = Trainer(
                 group.hyperParams, models, path.join(
                     exp_path, 
