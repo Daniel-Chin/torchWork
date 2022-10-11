@@ -12,11 +12,13 @@ cached_sizes = []
 def getGradNorm(params: List[torch.Tensor]):
     for p, size in cached_sizes:
         if p is params:
+            print('hit')
             buffer = torch.zeros((size, ))
             for i, param in enumerate(params):
                 buffer[i] = param.grad.norm(2)
             return buffer.norm(2)
     else:
+        print('miss')
         acc = 0
         for i, param in enumerate(params):
             acc += param.grad.norm(2).item() ** 2
