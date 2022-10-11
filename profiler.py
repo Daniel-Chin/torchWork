@@ -38,4 +38,4 @@ class Profiler:
             T = perf_counter() - self.start
             for tag, t in self.acc.items():
                 print(' ', tag, '\t', format(t / T, '3.0%'))
-        print(flush=True)
+        print(end='', flush=True)
