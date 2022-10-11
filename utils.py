@@ -8,8 +8,17 @@ def getParams(optim: torch.optim.Optimizer):
             s.append(param)
     return s
 
+cached_sizes = []
 def getGradNorm(params: List[torch.Tensor]):
-    s = 0
-    for param in params:
-        s += param.grad.norm(2).item() ** 2
-    return s ** .5
+    for p, size in cached_sizes:
+        if p is params:
+            buffer = torch.zeros((size, ))
+            for i, param in enumerate(params):
+                buffer[i] = param.grad.norm(2)
+            return buffer.norm(2)
+    else:
+        acc = 0
+        for i, param in enumerate(params):
+            acc += param.grad.norm(2).item() ** 2
+        cached_sizes.append((params, i + 1))
+        return acc ** .5
