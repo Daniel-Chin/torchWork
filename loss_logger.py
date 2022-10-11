@@ -24,16 +24,19 @@ class LossLogger:
         extras: List[Tuple[str, float]]=None, 
         profiler=None, 
     ):
-        self.compressor.newBatch(
-            epoch_i, batch_i, train_or_validate, 
-        )
-        self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
-        if extras is not None:
-            for key, value in extras:
-                self.compressor.write(key, value, 1)
-        with (profiler or nullcontext)('mesaFlush'):
+        with (profiler or nullcontext)('log.newBatch'):
+            self.compressor.newBatch(
+                epoch_i, batch_i, train_or_validate, 
+            )
+        with (profiler or nullcontext)('log.dfs'):
+            self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
+        with (profiler or nullcontext)('log.extras'):
+            if extras is not None:
+                for key, value in extras:
+                    self.compressor.write(key, value, 1)
+        with (profiler or nullcontext)('log.mesaFlush'):
             self.compressor.mesaFlush()
-        with (profiler or nullcontext)('flush'):
+        with (profiler or nullcontext)('log.flush'):
             if epoch_i % 8 == 0:
                 self.compressor.flush()
 
