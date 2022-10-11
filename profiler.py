@@ -37,4 +37,5 @@ class Profiler:
         with self.lock:
             T = perf_counter() - self.start
             for tag, t in self.acc.items():
-                print(' ', tag, 'takes', format(t / T, '.0%'))
+                print(' ', tag, '\t', format(t / T, '3.0%'))
+        print(flush=True)
