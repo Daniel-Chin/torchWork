@@ -39,7 +39,7 @@ class LossTree:
             )
             if lossWeightNode.children is None:
                 assert isinstance(child, (torch.Tensor, float, int))
-                acc += weight * child.cpu()
+                acc += weight * child
             else:
                 assert len(lossWeightNode.children)
                 assert isinstance(child, LossTree)
