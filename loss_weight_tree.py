@@ -32,5 +32,7 @@ class LossWeightTree:
         else:
             children = [x.to(device) for x in self.children]
         return __class__(
-            self.name, torch.tensor(self.weight, device=device), 
+            self.name, 
+            torch.tensor(self.weight, device=device), 
+            children, 
         )
