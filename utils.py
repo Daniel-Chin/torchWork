@@ -8,8 +8,8 @@ def getParams(optim: torch.optim.Optimizer):
             s.append(param)
     return s
 
-def getGradNorm(optim: torch.optim.Optimizer):
+def getGradNorm(params: List[torch.Tensor]):
     s = 0
-    for param in getParams(optim):
+    for param in params:
         s += param.grad.norm(2).item() ** 2
     return s ** .5
