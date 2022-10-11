@@ -24,39 +24,30 @@ class LossLogger:
         extras: List[Tuple[str, float]]=None, 
         profiler=None, 
     ):
-        with (profiler or nullcontext)('log.newBatch'):
-            self.compressor.newBatch(
-                epoch_i, batch_i, train_or_validate, 
-            )
-        with (profiler or nullcontext)('log.dfs'):
-            self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
-        with (profiler or nullcontext)('log.extras'):
-            if extras is not None:
-                for key, value in extras:
-                    self.compressor.write(key, value, 1)
-        with (profiler or nullcontext)('log.mesaFlush'):
-            self.compressor.mesaFlush()
-        with (profiler or nullcontext)('log.flush'):
-            if epoch_i % 8 == 0:
-                self.compressor.flush()
+        self.compressor.newBatch(
+            epoch_i, batch_i, train_or_validate, 
+        )
+        self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
+        if extras is not None:
+            for key, value in extras:
+                self.compressor.write(key, value, 1)
+        self.compressor.mesaFlush()
+        self.compressor.flush()
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
         epoch_i: int, depth: int, profiler, 
     ):
-        with (profiler or nullcontext)('dfs.0'):
-            self.compressor.write(
-                loss.name, loss.sum(lossWeightTree, epoch_i), depth, 
-            )
+        self.compressor.write(
+            loss.name, loss.sum(lossWeightTree, epoch_i), depth, 
+        )
         for lossWeightNode in lossWeightTree.children:
-            with (profiler or nullcontext)('dfs.1'):
-                name = lossWeightNode.name
-                lossChild: Union[
-                    LossTree, float, 
-                ] = loss.__getattribute__(name)
+            name = lossWeightNode.name
+            lossChild: Union[
+                LossTree, float, 
+            ] = loss.__getattribute__(name)
             if lossWeightNode.children is None:
-                with (profiler or nullcontext)('dfs.2'):
-                    self.compressor.write(name, lossChild, depth)
+                self.compressor.write(name, lossChild, depth)
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
