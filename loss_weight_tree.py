@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable, List, Optional, Union
 
 import torch
+from torchWork import DEVICE
 
 class LossWeightTree:
     def __init__(
@@ -11,7 +12,7 @@ class LossWeightTree:
         children: Optional[List[LossWeightTree]], 
     ) -> None:
         self.name = name
-        self.weight = weight
+        self.weight = torch.tensor(weight, device=DEVICE)
         self.children = children
     
     def __getitem__(self, key):
