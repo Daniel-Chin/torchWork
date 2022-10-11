@@ -31,6 +31,7 @@ class Trainer:
         self.hyperParams = hyperParams
         self.models = models
         self.save_path = save_path
+        self.name = save_path
 
         self.epoch = 0
         all_params = []
@@ -133,7 +134,7 @@ def runExperiment(
     for trainer_i in roundRobinSched(len(trainers)):
         trainer: Trainer = trainers[trainer_i]
         oneEpoch(
-            trainer.epoch, trainer.hyperParams, 
+            trainer.name, trainer.epoch, trainer.hyperParams, 
             models, trainer.optim, 
             trainSet, validateSet, 
             trainer.lossLogger, profiler, 
