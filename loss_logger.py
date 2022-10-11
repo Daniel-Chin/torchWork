@@ -3,6 +3,8 @@ import os
 from typing import Dict, Optional, Union, List, Tuple, TextIO
 import struct
 import pickle
+from io import BytesIO
+from contextlib import nullcontext
 
 from torchWork.loss_weight_tree import LossWeightTree
 from torchWork.loss_tree import LossTree
@@ -20,6 +22,7 @@ class LossLogger:
         train_or_validate: bool, 
         lossRoot: LossTree, lossWeightTree: LossWeightTree, 
         extras: List[Tuple[str, float]]=None, 
+        profiler=None, 
     ):
         self.compressor.newBatch(
             epoch_i, batch_i, train_or_validate, 
@@ -28,7 +31,11 @@ class LossLogger:
         if extras is not None:
             for key, value in extras:
                 self.compressor.write(key, value, 1)
-        self.compressor.flush()
+        with (profiler or nullcontext)('mesaFlush'):
+            self.compressor.mesaFlush()
+        with (profiler or nullcontext)('flush'):
+            if epoch_i % 8 == 0:
+                self.compressor.flush()
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
@@ -62,24 +69,33 @@ class Compressor:
         self.buffered_keys = []
         self.buffered_values = []
         self.now_batch = None
+        self.io = BytesIO()
 
     def write(self, key: str, value: float, padding: int):
         self.buffered_keys.append(' ' * padding + key)
         self.buffered_values.append(value)
     
     def flush(self):
+        self.io.flush()
+        self.io.seek(0)
         with open(self.filename, 'ab') as f:
-            if self.keys is None:
-                self.keys = self.buffered_keys.copy()
-                pickle.dump(self.keys, f)
-            assert self.keys == self.buffered_keys
-            epoch_i, batch_i, train_or_validate = self.now_batch
-            self.now_batch = None
-            f.write(struct.pack('!I', epoch_i))
-            f.write(struct.pack('!I', batch_i))
-            f.write(struct.pack('!?', train_or_validate))
-            for value in self.buffered_values:
-                f.write(struct.pack('!f', value or 0.0))
+            f.write(self.io.read())
+        self.io.seek(0)
+        self.io.truncate()
+
+    def mesaFlush(self):
+        f = self.io
+        if self.keys is None:
+            self.keys = self.buffered_keys.copy()
+            pickle.dump(self.keys, f)
+        assert self.keys == self.buffered_keys
+        epoch_i, batch_i, train_or_validate = self.now_batch
+        self.now_batch = None
+        f.write(struct.pack('!I', epoch_i))
+        f.write(struct.pack('!I', batch_i))
+        f.write(struct.pack('!?', train_or_validate))
+        for value in self.buffered_values:
+            f.write(struct.pack('!f', value or 0.0))
         self.buffered_keys  .clear()
         self.buffered_values.clear()
     
