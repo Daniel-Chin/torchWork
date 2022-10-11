@@ -28,7 +28,8 @@ class LossLogger:
             self.compressor.newBatch(
                 epoch_i, batch_i, train_or_validate, 
             )
-        self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
+        with (profiler or nullcontext)('log.dfs'):
+            self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
         with (profiler or nullcontext)('log.extras'):
             if extras is not None:
                 for key, value in extras:
