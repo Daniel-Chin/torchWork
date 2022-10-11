@@ -80,7 +80,7 @@ def main():
     for i in range(4):
         # dumb slow code
         sleep(.1)
-        with profiler.goodTime():
+        with profiler('good'):
             # backwards
             sleep(.3)
         profiler.report()

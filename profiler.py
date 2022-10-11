@@ -5,27 +5,36 @@ from contextlib import contextmanager
 class Profiler:
     def __init__(self) -> None:
         self.start = perf_counter()
-        self.acc_good_time = 0
+        self.acc = {}
+        self.current_tags = set()
         self.lock = Lock()
 
-    def goodTime(self):
-        @contextmanager
-        def f():
-            start = perf_counter()
-            try:
-                yield None
-            finally:
-                dt = perf_counter() - start
-                self.__accGoodTime(dt)
-        
-        return f()
-    
-    def __accGoodTime(self, dt):
+    @contextmanager
+    def __call__(self, *tags: str):
         with self.lock:
-            self.acc_good_time += dt
+            intersection = self.current_tags.intersection(tags)
+            if intersection:
+                raise ValueError(f'Cannot enter twice: {intersection}')
+            self.current_tags.update(tags)
+        start = perf_counter()
+        try:
+            yield None
+        finally:
+            dt = perf_counter() - start
+            self.__accTime(tags, dt)
+            with self.lock:
+                self.current_tags.difference_update(tags)
+    
+    def __accTime(self, tags, dt):
+        with self.lock:
+            for tag in tags:
+                if tag not in self.acc:
+                    self.acc[tag] = 0
+                self.acc[tag] += dt
     
     def report(self):
-        t = perf_counter() - self.start
-        score = self.acc_good_time / t
-        print('Profiler: Good time makes', format(score, '.0%'))
-        return score
+        print('Profiler:')
+        with self.lock:
+            T = perf_counter() - self.start
+            for tag, t in self.acc.items():
+                print(' ', tag, 'takes', format(t / T, '.0%'))
