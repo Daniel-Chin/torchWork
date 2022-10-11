@@ -26,12 +26,12 @@ class ExperimentGroup(ABC):
 class Trainer:
     def __init__(
         self, hyperParams: BaseHyperParams, 
-        models: Dict[str, nn.Module], save_path, 
+        models: Dict[str, nn.Module], save_path, name, 
     ) -> None:
         self.hyperParams = hyperParams
         self.models = models
         self.save_path = save_path
-        self.name = save_path
+        self.name = name
 
         self.epoch = 0
         all_params = []
@@ -121,11 +121,12 @@ def runExperiment(
             models = {}
             for name, ModelClass in modelClasses.items():
                 models[name] = ModelClass(group.hyperParams).to(DEVICE)
+            trainer_name = group.name() + f'_rand_{rand_init_i}'
             trainer = Trainer(
                 group.hyperParams, models, path.join(
                     exp_path, 
-                    group.name() + f'_rand_{rand_init_i}', 
-                ), 
+                    trainer_name, 
+                ), trainer_name, 
             )
             trainers.append(trainer)
 
