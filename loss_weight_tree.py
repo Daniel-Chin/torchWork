@@ -12,7 +12,7 @@ class LossWeightTree:
         children: Optional[List[LossWeightTree]], 
     ) -> None:
         self.name = name
-        self.weight = torch.tensor(weight, device=DEVICE)
+        self.weight = weight
         self.children = children
     
     def __getitem__(self, key):
