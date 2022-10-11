@@ -3,7 +3,7 @@ import torch
 HAS_CUDA = torch.cuda.is_available()
 CUDA = torch.device("cuda:0")
 CPU  = torch.device("cpu")
-print(f'{__name__ = }')
+# print(f'{__name__ = }')
 if HAS_CUDA:
     DEVICE = CUDA
     print('We have CUDA.', flush=True)
