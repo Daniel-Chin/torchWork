@@ -28,8 +28,7 @@ class LossLogger:
             self.compressor.newBatch(
                 epoch_i, batch_i, train_or_validate, 
             )
-        with (profiler or nullcontext)('log.dfs'):
-            self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
+        self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
         with (profiler or nullcontext)('log.extras'):
             if extras is not None:
                 for key, value in extras:
@@ -42,22 +41,25 @@ class LossLogger:
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
-        epoch_i: int, depth: int, 
+        epoch_i: int, depth: int, profiler, 
     ):
-        self.compressor.write(
-            loss.name, loss.sum(lossWeightTree, epoch_i), depth, 
-        )
+        with (profiler or nullcontext)('dfs.0'):
+            self.compressor.write(
+                loss.name, loss.sum(lossWeightTree, epoch_i), depth, 
+            )
         for lossWeightNode in lossWeightTree.children:
-            name = lossWeightNode.name
-            lossChild: Union[
-                LossTree, float, 
-            ] = loss.__getattribute__(name)
+            with (profiler or nullcontext)('dfs.1'):
+                name = lossWeightNode.name
+                lossChild: Union[
+                    LossTree, float, 
+                ] = loss.__getattribute__(name)
             if lossWeightNode.children is None:
-                self.compressor.write(name, lossChild, depth)
+                with (profiler or nullcontext)('dfs.2'):
+                    self.compressor.write(name, lossChild, depth)
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
-                    epoch_i, depth + 1, 
+                    epoch_i, depth + 1, profiler, 
                 )
 
     def clearFile(self):
