@@ -46,13 +46,6 @@ class Trainer:
         ))
         self.lossLogger.clearFile()
     
-    def saveCheckpoints(self):
-        for key, model in self.models.items():
-            torch.save(
-                model.state_dict(), 
-                f'{key}_epoch_{self.epoch}.pt', 
-            )
-
 def roundRobinSched(n_workers):
     ages = np.zeros((n_workers, ))
     while True:
