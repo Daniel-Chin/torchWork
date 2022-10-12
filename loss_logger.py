@@ -4,7 +4,6 @@ from typing import Dict, Optional, Union, List, Tuple, TextIO
 import struct
 import pickle
 from io import BytesIO
-from contextlib import nullcontext
 
 from torchWork.loss_weight_tree import LossWeightTree
 from torchWork.loss_tree import LossTree
