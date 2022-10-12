@@ -128,3 +128,7 @@ def decompressToText(input_filename: str, output: TextIO):
 
 def previewLosses(filename):
     decompressToText(filename, sys.stdout)
+
+def decompressLosses(filename):
+    with open(filename + '.txt', 'w') as f:
+        decompressToText(filename, f)
