@@ -1,5 +1,6 @@
 import sys
 import os
+from os import path
 from typing import Dict, Optional, Union, List, Tuple, TextIO
 import struct
 import pickle
@@ -8,11 +9,15 @@ from io import BytesIO
 from torchWork.loss_weight_tree import LossWeightTree
 from torchWork.loss_tree import LossTree
 
+LOSS_FILE_NAME = 'losses.torchworklosslog'
+
 class LossLogger:
     def __init__(
-        self, filename, print_every: int = 1, 
+        self, path_name, print_every: int = 1, 
     ) -> None:
-        self.filename = os.path.abspath(filename)
+        self.filename = path.abspath(path.join(
+            path_name, LOSS_FILE_NAME, 
+        ))
         self.print_every = print_every
         self.compressor = Compressor(self.filename)
     

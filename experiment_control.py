@@ -41,9 +41,7 @@ class Trainer:
             all_params, lr=hyperParams.lr, 
         )
         os.mkdir(save_path)
-        self.lossLogger = LossLogger(path.join(
-            save_path, 'losses.torchworklosslog', 
-        ))
+        self.lossLogger = LossLogger(save_path)
         self.lossLogger.clearFile()
     
 def roundRobinSched(n_workers):
