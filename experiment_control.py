@@ -22,7 +22,7 @@ class ExperimentGroup(ABC):
     def name(self):
         # Override this method!
         raise NotImplemented
-
+    
 class Trainer:
     def __init__(
         self, hyperParams: BaseHyperParams, 
@@ -55,18 +55,18 @@ def roundRobinSched(n_workers):
         end   = perf_counter()
         ages[elected] += end - start
 
-def loadCurrentExperiment(current_experiment_path) -> Tuple[
+def loadExperiment(experiment_path) -> Tuple[
     str, int, List[ExperimentGroup], 
 ]:
     spec = importlib.util.spec_from_file_location(
-        "current_experiment", current_experiment_path, 
+        "experiment", experiment_path, 
     )
-    currentExperiment = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(currentExperiment)
+    experiment = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(experiment)
     return (
-        currentExperiment.EXP_NAME, 
-        currentExperiment.N_RAND_INITS, 
-        currentExperiment.GROUPS, 
+        experiment.EXP_NAME, 
+        experiment.N_RAND_INITS, 
+        experiment.GROUPS, 
     )
 
 def getCommitHash():
@@ -83,7 +83,7 @@ def runExperiment(
 ):
     (
         experiment_name, n_rand_inits, groups, 
-    ) = loadCurrentExperiment(current_experiment_path)
+    ) = loadExperiment(current_experiment_path)
 
     names = set()
     for group in groups:
@@ -114,12 +114,13 @@ def runExperiment(
             models = {}
             for name, ModelClass in modelClasses.items():
                 models[name] = ModelClass(group.hyperParams).to(DEVICE)
-            trainer_name = group.name() + f'_rand_{rand_init_i}'
+            group_path = getGroupPath(
+                exp_path, group.name(), rand_init_i, 
+            )
+            trainer_name = path.split(group_path)[-1]
             trainer = Trainer(
-                group.hyperParams, models, path.join(
-                    exp_path, 
-                    trainer_name, 
-                ), trainer_name, 
+                group.hyperParams, models, 
+                group_path, trainer_name, 
             )
             trainers.append(trainer)
 
@@ -135,3 +136,11 @@ def runExperiment(
             trainer.save_path, 
         )
         trainer.epoch += 1
+
+def getGroupPath(
+    experiment_path: str, group_name: str, rand_init_i: int, 
+):
+    return path.join(
+        experiment_path, 
+        group_name + f'_rand_{rand_init_i}', 
+    )
