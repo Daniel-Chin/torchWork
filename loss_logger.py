@@ -108,13 +108,13 @@ def Decompressor(filename: str):
             data = f.read(4)
             if data == b'':
                 break
-            epoch_i           = struct.unpack('!I', data)[0]
-            batch_i           = struct.unpack('!I', f.read(4))[0]
-            train_or_validate = struct.unpack('!?', f.read(1))[0]
+            epoch_i          : int  = struct.unpack('!I', data)[0]
+            batch_i          : int  = struct.unpack('!I', f.read(4))[0]
+            train_not_validate: bool = struct.unpack('!?', f.read(1))[0]
             entries: Dict[str, float] = {}
             for key in keys:
                 entries[key] = struct.unpack('!f', f.read(4))[0]
-            yield epoch_i, batch_i, train_or_validate, entries
+            yield epoch_i, batch_i, train_not_validate, entries
 
 def decompressToText(input_filename: str, output: TextIO):
     d = Decompressor(input_filename)
