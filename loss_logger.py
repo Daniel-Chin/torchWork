@@ -46,7 +46,7 @@ class LossLogger:
                 LossTree, float, 
             ] = loss.__getattribute__(name)
             if lossWeightNode.children is None:
-                self.compressor.write(name, lossChild, depth)
+                self.compressor.write(name, lossChild, depth + 1)
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
@@ -103,7 +103,16 @@ class Compressor:
 
 def Decompressor(filename: str):
     with open(filename, 'rb') as f:
-        keys: List[str] = pickle.load(f)
+        pretty_keys: List[str] = pickle.load(f)
+        stack = []
+        tree_keys = []
+        for pretty_key in pretty_keys:
+            node_name = pretty_key.lstrip(' ')
+            depth = len(pretty_key) - len(node_name) - 1
+            for _ in range(len(stack) - depth):
+                stack.pop(-1)
+            stack.append(node_name)
+            tree_keys.append('.'.join(stack))
         while True:
             data = f.read(4)
             if data == b'':
@@ -111,14 +120,21 @@ def Decompressor(filename: str):
             epoch_i          : int  = struct.unpack('!I', data)[0]
             batch_i          : int  = struct.unpack('!I', f.read(4))[0]
             train_not_validate: bool = struct.unpack('!?', f.read(1))[0]
-            entries: Dict[str, float] = {}
-            for key in keys:
-                entries[key] = struct.unpack('!f', f.read(4))[0]
-            yield epoch_i, batch_i, train_not_validate, entries
+            loss_values = [
+                struct.unpack('!f', f.read(4))[0]
+                for _ in pretty_keys
+            ]
+            pretty_entries = dict(zip(pretty_keys, loss_values))
+            tree_entries   = dict(zip(tree_keys  , loss_values))
+
+            yield (
+                epoch_i, batch_i, train_not_validate, 
+                pretty_entries, tree_entries, 
+            )
 
 def decompressToText(input_filename: str, output: TextIO):
     d = Decompressor(input_filename)
-    for epoch_i, batch_i, train_or_validate, entries in d:
+    for epoch_i, batch_i, train_or_validate, entries, _ in d:
         print(f'''epoch {epoch_i}, {
             'train' if train_or_validate else 'validate'
         }, batch {batch_i}:''', file=output)
