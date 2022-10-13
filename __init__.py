@@ -9,3 +9,4 @@ from torchWork.profiler import Profiler
 from torchWork.experiment_control import (
     ExperimentGroup, runExperiment, 
 )
+from torchWork.plot_losses import plotLosses
