@@ -53,11 +53,11 @@ def roundRobinSched(n_workers):
         end   = perf_counter()
         ages[elected] += end - start
 
-def loadExperiment(experiment_path) -> Tuple[
+def loadExperiment(experiment_py_path) -> Tuple[
     str, int, List[ExperimentGroup], 
 ]:
     spec = importlib.util.spec_from_file_location(
-        "experiment", experiment_path, 
+        "experiment", experiment_py_path, 
     )
     experiment = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(experiment)
