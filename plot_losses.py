@@ -121,6 +121,7 @@ def plotLosses(
                 ax.set_title(lossType.display_name)
     for ax in axes:
         ax.axhline(y=0, color='k')
+        ax.set_xlabel('epoch')
     axes[-1].legend()
     fig.tight_layout()
     return fig
