@@ -71,7 +71,9 @@ def plotLosses(
     ) = loadExperiment(experiment_py_path)
     print(f'{experiment_name = }')
     group_start = epoch_start // average_over
-    if epoch_stop is not None:
+    if epoch_stop is None:
+        group_stop = None
+    else:
         group_stop = epoch_stop // average_over
     for group_i, group in enumerate(groups):
         for rand_init_i in tqdm.trange(
@@ -98,7 +100,6 @@ def plotLosses(
                             'train' if train_or_validate else 'validate', 
                             loss_name, 
                         )
-                        print(lossType.display_name)
                         try:
                             lossAcc = lossAccs[lossType]
                         except KeyError:
@@ -114,10 +115,12 @@ def plotLosses(
                 ax.plot(
                     epochs[group_start:group_stop], 
                     lossAcc.getHistory()[group_start:group_stop], 
-                    c=hsv_to_rgb((group_i, 1, .8)), 
+                    c=hsv_to_rgb((group_i / len(groups), 1, .8)), 
                     label=group.name(), 
                 )
                 ax.set_title(lossType.display_name)
+    for ax in axes:
+        ax.axhline(y=0, color='k')
     axes[-1].legend()
     fig.tight_layout()
     return fig
