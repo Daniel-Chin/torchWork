@@ -38,7 +38,7 @@ class LossAcc:
         self.batch_acc = 0
         self.batch_size = 0
     
-    def eat(self, x):
+    def eat(self, x, /):
         self.batch_acc += x
         self.batch_size += 1
     
