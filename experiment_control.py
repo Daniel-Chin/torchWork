@@ -14,6 +14,8 @@ from torch import nn
 from torchWork import BaseHyperParams, LossLogger, Profiler, DEVICE
 import git
 
+EXPERIMENT_PY_FILENAME = 'experiment.py'
+
 class ExperimentGroup(ABC):
     def __init__(self, hyperParams: BaseHyperParams) -> None:
         self.hyperParams = hyperParams
@@ -99,7 +101,7 @@ def runExperiment(
     )
     os.makedirs(exp_path)
     shutil.copy(current_experiment_path, path.join(
-        exp_path, 'experiment.py', 
+        exp_path, EXPERIMENT_PY_FILENAME, 
     ))
     with open(path.join(
         exp_path, 'commit_hash.txt', 
