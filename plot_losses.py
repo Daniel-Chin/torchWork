@@ -109,6 +109,10 @@ def plotLosses(
             epochs = [(i + 1) * average_over for i in range(
                 next(iter(lossAccs.values())).n_groups, 
             )]
+            if rand_init_i == 0:
+                kw = dict(label=group.name())
+            else:
+                kw = dict()
             for ax, (lossType, lossAcc) in zip(
                 axes, lossAccs.items(), 
             ):
@@ -116,7 +120,7 @@ def plotLosses(
                     epochs[group_start:group_stop], 
                     lossAcc.getHistory()[group_start:group_stop], 
                     c=hsv_to_rgb((group_i / len(groups), 1, .8)), 
-                    label=group.name(), 
+                    **kw, 
                 )
                 ax.set_title(lossType.display_name)
     for ax in axes:
