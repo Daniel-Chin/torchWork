@@ -2,6 +2,8 @@ from time import perf_counter
 from threading import Lock
 from contextlib import contextmanager
 
+from tabulate import tabulate
+
 class Profiler:
     def __init__(self) -> None:
         self.start = perf_counter()
@@ -36,6 +38,5 @@ class Profiler:
         print('Profiler:')
         with self.lock:
             T = perf_counter() - self.start
-            for tag, t in self.acc.items():
-                print(' ', tag, '\t', format(t / T, '3.0%'))
-        print(end='', flush=True)
+            table = [('', tag, t / T) for tag, t in self.acc.items()]
+        print(tabulate(table, floatfmt='3.0%', tablefmt='plain'), flush=True)
