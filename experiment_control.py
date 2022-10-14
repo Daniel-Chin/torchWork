@@ -131,7 +131,7 @@ def runExperiment(
         with profiler('oneEpoch'):
             oneEpoch(
                 trainer.name, trainer.epoch, trainer.hyperParams, 
-                models, trainer.optim, 
+                trainer.models, trainer.optim, 
                 trainSet, validateSet, 
                 trainer.lossLogger, profiler, 
                 trainer.save_path, 
