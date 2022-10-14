@@ -8,5 +8,6 @@ from torchWork.hyper_params import BaseHyperParams
 from torchWork.profiler import Profiler
 from torchWork.experiment_control import (
     ExperimentGroup, runExperiment, loadExperiment, 
+    saveModels, loadLatestModels, 
 )
 from torchWork.plot_losses import plotLosses

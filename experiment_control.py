@@ -1,6 +1,6 @@
 import os
 from os import path
-from typing import Callable, Dict, Tuple, Type, List
+from typing import Callable, Dict, Optional, Tuple, Type, List
 from datetime import datetime
 from time import perf_counter
 import importlib.util
@@ -145,3 +145,41 @@ def getGroupPath(
         experiment_path, 
         group_name + f'_rand_{rand_init_i}', 
     )
+
+def saveModels(models: Dict[str, nn.Module], epoch, save_path):
+    for key, model in models.items():
+        torch.save(model.state_dict(), path.join(
+            save_path, f'{key}_epoch_{epoch}.pt', 
+        ))
+
+def loadLatestModels(
+    experiment_path: str, group: ExperimentGroup, 
+    rand_init_i: int, 
+    modelClasses: Dict[str, Type[nn.Module]], 
+    lock_epoch: Optional[int]=None, 
+):
+    models: Dict[str, nn.Module] = {}
+    for name, ModelClass in modelClasses.items():
+        models[name] = ModelClass(group.hyperParams).to(DEVICE)
+    
+    group_path = getGroupPath(experiment_path, group.name(), rand_init_i)
+    if lock_epoch is None:
+        max_epoch = 0
+        for filename in os.listdir(group_path):
+            try:
+                x = filename.split('_epoch_')[1]
+                x = x.split('.pt')[0]
+                epoch = int(x)
+            except (ValueError, IndexError):
+                continue
+            else:
+                max_epoch = max(max_epoch, epoch)
+        epoch = max_epoch
+    else:
+        epoch = lock_epoch
+    print('taking epoch', epoch)
+    for name, model in models.items():
+        model.load_state_dict(torch.load(path.join(
+            group_path, f'{name}_epoch_{epoch}.pt', 
+        ), map_location=DEVICE))
+    return models
