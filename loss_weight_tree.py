@@ -37,3 +37,8 @@ class LossWeightTree:
             torch.tensor(self.weight, device=device), 
             children, 
         )
+    
+    def print(self, depth=0):
+        print(' ' * depth, self.name, ': ', self.weight, sep='')
+        for child in self.children or []:
+            child.print(depth + 1)
