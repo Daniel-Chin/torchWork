@@ -1,9 +1,10 @@
 from os import path
 from typing import Callable, List, Optional
+import itertools
 
 from matplotlib import pyplot as plt
 from matplotlib.colors import hsv_to_rgb
-import tqdm
+from tqdm import tqdm
 
 from torchWork.experiment_control import loadExperiment, getGroupPath
 from torchWork.loss_logger import Decompressor, LOSS_FILE_NAME
@@ -75,54 +76,53 @@ def plotLosses(
         group_stop = None
     else:
         group_stop = epoch_stop // average_over
-    for group_i, group in enumerate(groups):
-        for rand_init_i in tqdm.trange(
-            n_rand_inits, desc=group.name(), 
-        ):
-            lossAccs = {x: LossAcc(average_over) for x in lossTypes}
-            with OnChangeOrEnd(*[
-                x.endBatch for x in lossAccs.values()
-            ]) as oCoE:
-                for (
-                    epoch_i, batch_i, train_or_validate, _, entries, 
-                ) in Decompressor(path.join(getGroupPath(
-                    path.dirname(experiment_py_path), 
-                    group.name(), rand_init_i, 
-                ), LOSS_FILE_NAME)):
+    for (group_i, group), rand_init_i in tqdm([*itertools.product(
+        enumerate(groups), range(n_rand_inits), 
+    )]):
+        lossAccs = {x: LossAcc(average_over) for x in lossTypes}
+        with OnChangeOrEnd(*[
+            x.endBatch for x in lossAccs.values()
+        ]) as oCoE:
+            for (
+                epoch_i, batch_i, train_or_validate, _, entries, 
+            ) in Decompressor(path.join(getGroupPath(
+                path.dirname(experiment_py_path), 
+                group.name(), rand_init_i, 
+            ), LOSS_FILE_NAME)):
+                try:
+                    oCoE.eat(epoch_i)
+                except ZeroDivisionError:
+                    raise ValueError(
+                        'lossAcc is empty when epoch finished.', 
+                    )
+                for loss_name, value in entries.items():
+                    lossType = LossType(
+                        'train' if train_or_validate else 'validate', 
+                        loss_name, 
+                    )
                     try:
-                        oCoE.eat(epoch_i)
-                    except ZeroDivisionError:
-                        raise ValueError(
-                            'lossAcc is empty when epoch finished.', 
-                        )
-                    for loss_name, value in entries.items():
-                        lossType = LossType(
-                            'train' if train_or_validate else 'validate', 
-                            loss_name, 
-                        )
-                        try:
-                            lossAcc = lossAccs[lossType]
-                        except KeyError:
-                            pass
-                        else:
-                            lossAcc.eat(value)
-            epochs = [(i + 1) * average_over for i in range(
-                next(iter(lossAccs.values())).n_groups, 
-            )]
-            if rand_init_i == 0:
-                kw = dict(label=group.name())
-            else:
-                kw = dict()
-            for ax, (lossType, lossAcc) in zip(
-                axes, lossAccs.items(), 
-            ):
-                ax.plot(
-                    epochs[group_start:group_stop], 
-                    lossAcc.getHistory()[group_start:group_stop], 
-                    c=hsv_to_rgb((group_i / len(groups), 1, .8)), 
-                    **kw, 
-                )
-                ax.set_title(lossType.display_name)
+                        lossAcc = lossAccs[lossType]
+                    except KeyError:
+                        pass
+                    else:
+                        lossAcc.eat(value)
+        epochs = [(i + 1) * average_over for i in range(
+            next(iter(lossAccs.values())).n_groups, 
+        )]
+        if rand_init_i == 0:
+            kw = dict(label=group.name())
+        else:
+            kw = dict()
+        for ax, (lossType, lossAcc) in zip(
+            axes, lossAccs.items(), 
+        ):
+            ax.plot(
+                epochs[group_start:group_stop], 
+                lossAcc.getHistory()[group_start:group_stop], 
+                c=hsv_to_rgb((group_i / len(groups), 1, .8)), 
+                **kw, 
+            )
+            ax.set_title(lossType.display_name)
     for ax in axes:
         ax.axhline(y=0, color='k')
         ax.set_xlabel('epoch')
