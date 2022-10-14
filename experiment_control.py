@@ -126,13 +126,14 @@ def runExperiment(
     profiler = Profiler()
     for trainer_i in roundRobinSched(len(trainers)):
         trainer: Trainer = trainers[trainer_i]
-        oneEpoch(
-            trainer.name, trainer.epoch, trainer.hyperParams, 
-            models, trainer.optim, 
-            trainSet, validateSet, 
-            trainer.lossLogger, profiler, 
-            trainer.save_path, 
-        )
+        with profiler('oneEpoch'):
+            oneEpoch(
+                trainer.name, trainer.epoch, trainer.hyperParams, 
+                models, trainer.optim, 
+                trainSet, validateSet, 
+                trainer.lossLogger, profiler, 
+                trainer.save_path, 
+            )
         trainer.epoch += 1
 
 def getGroupPath(
