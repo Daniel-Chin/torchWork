@@ -26,6 +26,7 @@ class LossLogger:
         profiler, 
         lossRoot: LossTree, lossWeightTree: LossWeightTree, 
         extras: List[Tuple[str, float]]=None, 
+        flush=True, 
     ):
         self.compressor.newBatch(
             epoch_i, batch_i, train_or_validate, 
@@ -35,8 +36,9 @@ class LossLogger:
             for key, value in extras:
                 self.compressor.write(key, value, 1)
         self.compressor.mesaFlush()
-        with profiler('log.flush'):
-            self.compressor.flush()
+        if flush:
+            with profiler('log.flush'):
+                self.compressor.flush()
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
