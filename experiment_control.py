@@ -134,7 +134,7 @@ def runExperiment(
                 trainer.models, trainer.optim, 
                 trainSet, validateSet, 
                 trainer.lossLogger, profiler, 
-                trainer.save_path, 
+                trainer.save_path, trainer_i, 
             )
         trainer.epoch += 1
 
