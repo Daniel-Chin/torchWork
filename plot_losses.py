@@ -43,6 +43,8 @@ class LossAcc:
         self.batch_size += 1
     
     def endBatch(self, epoch_i=None):
+        if self.batch_size == 0:
+            return
         x = self.batch_acc / self.batch_size
         self.batch_acc = 0
         self.batch_size = 0
@@ -89,12 +91,7 @@ def plotLosses(
                 path.dirname(experiment_py_path), 
                 group.name(), rand_init_i, 
             ), LOSS_FILE_NAME)):
-                try:
-                    oCoE.eat(epoch_i)
-                except ZeroDivisionError:
-                    raise ValueError(
-                        'lossAcc is empty when epoch finished.', 
-                    )
+                oCoE.eat(epoch_i)
                 for loss_name, value in entries.items():
                     lossType = LossType(
                         'train' if train_or_validate else 'validate', 
