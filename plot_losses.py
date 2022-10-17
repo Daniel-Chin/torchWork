@@ -116,7 +116,7 @@ def plotLosses(
             ax.plot(
                 epochs[group_start:group_stop], 
                 lossAcc.getHistory()[group_start:group_stop], 
-                c=hsv_to_rgb((group_i / len(groups), 1, .8)), 
+                c=hsv_to_rgb((group_i / len(groups) * .8, 1, .8)), 
                 **kw, 
             )
             ax.set_title(lossType.display_name)
