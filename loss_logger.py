@@ -29,45 +29,38 @@ class LossLogger:
         extras: List[Tuple[str, float]]=None, 
         flush=True, 
     ):
-        with profiler('log.batch'):
-            self.compressor.newBatch(
-                epoch_i, batch_i, train_or_validate, 
-            )
-        with profiler('log.dfs'):
-            self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
-        with profiler('log.extras'):
-            if extras is not None:
-                for key, value in extras:
-                    self.compressor.write(key, value, 1)
+        self.compressor.newBatch(
+            epoch_i, batch_i, train_or_validate, 
+        )
+        self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
+        if extras is not None:
+            for key, value in extras:
+                self.compressor.write(key, value, 1)
         with profiler('log.mesaFlush'):
-            self.compressor.mesaFlush()
+            self.compressor.mesaFlush(profiler)
         if flush:
             with profiler('log.flush'):
                 self.compressor.flush()
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
-        epoch_i: int, depth: int, profiler, 
+        epoch_i: int, depth: int, 
     ):
-        with profiler('sum loss'):
-            _sum = loss.sum(lossWeightTree, epoch_i)
-        with profiler('log.write_compressor'):
-            self.compressor.write(
-                loss.name, _sum, depth, 
-            )
+        _sum = loss.sum(lossWeightTree, epoch_i)
+        self.compressor.write(
+            loss.name, _sum, depth, 
+        )
         for lossWeightNode in lossWeightTree.children:
-            with profiler('log.lookup'):
-                name = lossWeightNode.name
-                lossChild: Union[
-                    LossTree, float, 
-                ] = loss.__getattribute__(name)
+            name = lossWeightNode.name
+            lossChild: Union[
+                LossTree, float, 
+            ] = loss.__getattribute__(name)
             if lossWeightNode.children is None:
-                with profiler('log.write_compressor'):
-                    self.compressor.write(name, lossChild, depth + 1)
+                self.compressor.write(name, lossChild, depth + 1)
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
-                    epoch_i, depth + 1, profiler, 
+                    epoch_i, depth + 1, 
                 )
 
     def clearFile(self):
@@ -96,7 +89,7 @@ class Compressor:
         self.io.seek(0)
         self.io.truncate()
 
-    def mesaFlush(self):
+    def mesaFlush(self, profiler):
         f = self.io
         if self.keys is None:
             self.keys = self.buffered_keys.copy()
@@ -104,11 +97,12 @@ class Compressor:
         assert self.keys == self.buffered_keys
         epoch_i, batch_i, train_or_validate = self.now_batch
         self.now_batch = None
-        f.write(struct.pack('!I', epoch_i))
-        f.write(struct.pack('!I', batch_i))
-        f.write(struct.pack('!?', train_or_validate))
-        for value in self.buffered_values:
-            f.write(struct.pack('!f', value or 0.0))
+        with profiler('mesa.write_pack'):
+            f.write(struct.pack('!I', epoch_i))
+            f.write(struct.pack('!I', batch_i))
+            f.write(struct.pack('!?', train_or_validate))
+            for value in self.buffered_values:
+                f.write(struct.pack('!f', value or 0.0))
         self.buffered_keys  .clear()
         self.buffered_values.clear()
     
