@@ -99,12 +99,14 @@ class Compressor:
         assert self.keys == self.buffered_keys
         epoch_i, batch_i, train_or_validate = self.now_batch
         self.now_batch = None
-        with profiler('mesa.write_pack'):
-            f.write(struct.pack(
+        with profiler('mesa.pack'):
+            data = struct.pack(
                 self.struct_format, 
                 epoch_i, batch_i, train_or_validate, 
                 *[x or 0.0 for x in self.buffered_values], 
-            ))
+            )
+        with profiler('mesa.write'):
+            f.write(data)
         self.buffered_keys  .clear()
         self.buffered_values.clear()
     
