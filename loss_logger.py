@@ -76,14 +76,13 @@ class Compressor:
         self.buffered_keys.append(' ' * padding + key)
         self.buffered_values.append(value)
     
-    def flush(self, profiler):
-        with profiler('log.flush'):
-            self.io.flush()
-            self.io.seek(0)
-            with open(self.filename, 'ab') as f:
-                f.write(self.io.read())
-            self.io.seek(0)
-            self.io.truncate()
+    def flush(self):
+        self.io.flush()
+        self.io.seek(0)
+        with open(self.filename, 'ab') as f:
+            f.write(self.io.read())
+        self.io.seek(0)
+        self.io.truncate()
 
     def mesaFlush(self):
         f = self.io
