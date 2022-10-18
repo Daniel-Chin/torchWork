@@ -71,6 +71,7 @@ class Compressor:
     def __init__(self, filename: str) -> None:
         self.filename = filename
         self.keys: Optional[List[str]] = None
+        self.struct_format: Optional[str] = None
 
         self.buffered_keys = []
         self.buffered_values = []
@@ -94,15 +95,16 @@ class Compressor:
         if self.keys is None:
             self.keys = self.buffered_keys.copy()
             pickle.dump(self.keys, f)
+            self.struct_format = '!II?' + 'f' * len(self.keys)
         assert self.keys == self.buffered_keys
         epoch_i, batch_i, train_or_validate = self.now_batch
         self.now_batch = None
         with profiler('mesa.write_pack'):
-            f.write(struct.pack('!I', epoch_i))
-            f.write(struct.pack('!I', batch_i))
-            f.write(struct.pack('!?', train_or_validate))
-            for value in self.buffered_values:
-                f.write(struct.pack('!f', value or 0.0))
+            f.write(struct.pack(
+                self.struct_format, 
+                epoch_i, batch_i, train_or_validate, 
+                *[x or 0.0 for x in self.buffered_values], 
+            ))
         self.buffered_keys  .clear()
         self.buffered_values.clear()
     
