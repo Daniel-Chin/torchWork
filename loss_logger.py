@@ -1,3 +1,4 @@
+import profile
 import sys
 from os import path
 from typing import Optional, Union, List, Tuple, TextIO
@@ -23,6 +24,7 @@ class LossLogger:
     def eat(
         self, epoch_i: int, batch_i: int, 
         train_or_validate: bool, 
+        profiler, 
         lossRoot: LossTree, lossWeightTree: LossWeightTree, 
         extras: List[Tuple[str, float]]=None, 
         flush=True, 
@@ -30,7 +32,7 @@ class LossLogger:
         self.compressor.newBatch(
             epoch_i, batch_i, train_or_validate, 
         )
-        self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
+        self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
         if extras is not None:
             for key, value in extras:
                 self.compressor.write(key, value, 1)
@@ -40,11 +42,14 @@ class LossLogger:
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
-        epoch_i: int, depth: int, 
+        epoch_i: int, depth: int, profiler, 
     ):
-        self.compressor.write(
-            loss.name, loss.sum(lossWeightTree, epoch_i), depth, 
-        )
+        with profile('sum loss'):
+            _sum = loss.sum(lossWeightTree, epoch_i)
+        with profile('write compressor'):
+            self.compressor.write(
+                loss.name, _sum, depth, 
+            )
         for lossWeightNode in lossWeightTree.children:
             name = lossWeightNode.name
             lossChild: Union[
@@ -55,7 +60,7 @@ class LossLogger:
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
-                    epoch_i, depth + 1, 
+                    epoch_i, depth + 1, profiler, 
                 )
 
     def clearFile(self):
