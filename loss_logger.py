@@ -23,7 +23,6 @@ class LossLogger:
     def eat(
         self, epoch_i: int, batch_i: int, 
         train_or_validate: bool, 
-        profiler, 
         lossRoot: LossTree, lossWeightTree: LossWeightTree, 
         extras: List[Tuple[str, float]]=None, 
         flush=True, 
@@ -31,18 +30,17 @@ class LossLogger:
         self.compressor.newBatch(
             epoch_i, batch_i, train_or_validate, 
         )
-        self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
+        self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
         if extras is not None:
             for key, value in extras:
                 self.compressor.write(key, value, 1)
         self.compressor.mesaFlush()
         if flush:
-            with profiler('log.flush'):
-                self.compressor.flush()
+            self.compressor.flush()
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
-        epoch_i: int, depth: int, profiler, 
+        epoch_i: int, depth: int, 
     ):
         self.compressor.write(
             loss.name, loss.sum(lossWeightTree, epoch_i), depth, 
@@ -57,7 +55,7 @@ class LossLogger:
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
-                    epoch_i, depth + 1, profiler, 
+                    epoch_i, depth + 1, 
                 )
 
     def clearFile(self):
@@ -78,13 +76,14 @@ class Compressor:
         self.buffered_keys.append(' ' * padding + key)
         self.buffered_values.append(value)
     
-    def flush(self):
-        self.io.flush()
-        self.io.seek(0)
-        with open(self.filename, 'ab') as f:
-            f.write(self.io.read())
-        self.io.seek(0)
-        self.io.truncate()
+    def flush(self, profiler):
+        with profiler('log.flush'):
+            self.io.flush()
+            self.io.seek(0)
+            with open(self.filename, 'ab') as f:
+                f.write(self.io.read())
+            self.io.seek(0)
+            self.io.truncate()
 
     def mesaFlush(self):
         f = self.io
