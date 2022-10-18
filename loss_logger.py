@@ -29,16 +29,21 @@ class LossLogger:
         extras: List[Tuple[str, float]]=None, 
         flush=True, 
     ):
-        self.compressor.newBatch(
-            epoch_i, batch_i, train_or_validate, 
-        )
-        self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
-        if extras is not None:
-            for key, value in extras:
-                self.compressor.write(key, value, 1)
-        self.compressor.mesaFlush()
+        with profiler('log.batch'):
+            self.compressor.newBatch(
+                epoch_i, batch_i, train_or_validate, 
+            )
+        with profiler('log.dfs'):
+            self.dfs(lossRoot, lossWeightTree, epoch_i, 1, profiler)
+        with profiler('log.extras'):
+            if extras is not None:
+                for key, value in extras:
+                    self.compressor.write(key, value, 1)
+        with profiler('log.mesaFlush'):
+            self.compressor.mesaFlush()
         if flush:
-            self.compressor.flush()
+            with profiler('log.flush'):
+                self.compressor.flush()
 
     def dfs(
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
@@ -46,17 +51,19 @@ class LossLogger:
     ):
         with profiler('sum loss'):
             _sum = loss.sum(lossWeightTree, epoch_i)
-        with profiler('write compressor'):
+        with profiler('log.write_compressor'):
             self.compressor.write(
                 loss.name, _sum, depth, 
             )
         for lossWeightNode in lossWeightTree.children:
-            name = lossWeightNode.name
-            lossChild: Union[
-                LossTree, float, 
-            ] = loss.__getattribute__(name)
+            with profiler('log.lookup'):
+                name = lossWeightNode.name
+                lossChild: Union[
+                    LossTree, float, 
+                ] = loss.__getattribute__(name)
             if lossWeightNode.children is None:
-                self.compressor.write(name, lossChild, depth + 1)
+                with profiler('log.write_compressor'):
+                    self.compressor.write(name, lossChild, depth + 1)
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
