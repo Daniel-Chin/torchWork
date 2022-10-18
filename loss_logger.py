@@ -44,9 +44,9 @@ class LossLogger:
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
         epoch_i: int, depth: int, profiler, 
     ):
-        with profile('sum loss'):
+        with profiler('sum loss'):
             _sum = loss.sum(lossWeightTree, epoch_i)
-        with profile('write compressor'):
+        with profiler('write compressor'):
             self.compressor.write(
                 loss.name, _sum, depth, 
             )
