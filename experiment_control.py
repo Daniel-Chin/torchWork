@@ -131,12 +131,12 @@ def runExperiment(
         trainer: Trainer = trainers[trainer_i]
         with profiler('oneEpoch'):
             oneEpoch(
-                trainer.name, trainer.epoch, trainer.hyperParams, 
+                trainer.name, trainer.epoch, 
+                experiment, trainer.hyperParams, 
                 trainer.models, trainer.optim, 
                 trainSet, validateSet, 
                 trainer.lossLogger, profiler, 
                 trainer.save_path, trainer_i, 
-                experiment, 
             )
         trainer.epoch += 1
 
