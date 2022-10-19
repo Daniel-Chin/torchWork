@@ -5,6 +5,7 @@ import struct
 import pickle
 from io import BytesIO
 
+import torch
 from torchWork.loss_weight_tree import LossWeightTree
 from torchWork.loss_tree import LossTree
 
@@ -25,7 +26,7 @@ class LossLogger:
         train_or_validate: bool, 
         profiler, 
         lossRoot: LossTree, lossWeightTree: LossWeightTree, 
-        extras: List[Tuple[str, float]]=None, 
+        extras: List[Tuple[str, torch.Tensor]]=None, 
         flush=True, 
     ):
         self.compressor.newBatch(
@@ -34,7 +35,7 @@ class LossLogger:
         self.dfs(lossRoot, lossWeightTree, epoch_i, 1)
         if extras is not None:
             for key, value in extras:
-                self.compressor.write(key, value, 1)
+                self.compressor.write(key, value.item(), 1)
         with profiler('log.mesaFlush'):
             self.compressor.mesaFlush(profiler)
         if flush:
@@ -45,17 +46,21 @@ class LossLogger:
         self, loss: LossTree, lossWeightTree: LossWeightTree, 
         epoch_i: int, depth: int, 
     ):
-        _sum = loss.sum(lossWeightTree, epoch_i)
+        _sum = loss.sum(lossWeightTree, epoch_i).item()
         self.compressor.write(
             loss.name, _sum, depth, 
         )
         for lossWeightNode in lossWeightTree.children:
             name = lossWeightNode.name
             lossChild: Union[
-                LossTree, float, 
+                LossTree, Optional[torch.Tensor], 
             ] = loss.__getattribute__(name)
             if lossWeightNode.children is None:
-                self.compressor.write(name, lossChild, depth + 1)
+                self.compressor.write(
+                    name, 
+                    0.0 if lossChild is None else lossChild.item(), 
+                    depth + 1, 
+                )
             else:
                 self.dfs(
                     lossChild, lossWeightNode, 
@@ -73,7 +78,7 @@ class Compressor:
         self.struct_format: Optional[str] = None
 
         self.buffered_keys = []
-        self.buffered_values = []
+        self.buffered_values: List[float] = []
         self.now_batch = None
         self.io = BytesIO()
 
@@ -102,7 +107,7 @@ class Compressor:
             data = struct.pack(
                 self.struct_format, 
                 epoch_i, batch_i, train_or_validate, 
-                *[x or 0.0 for x in self.buffered_values], 
+                *self.buffered_values, 
             )
         with profiler('mesa.write'):
             f.write(data)
