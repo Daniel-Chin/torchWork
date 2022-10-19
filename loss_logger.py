@@ -1,4 +1,3 @@
-import profile
 import sys
 from os import path
 from typing import Optional, Union, List, Tuple, TextIO
