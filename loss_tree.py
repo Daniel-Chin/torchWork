@@ -6,7 +6,7 @@ from typing import List, Union
 import torch
 
 from indentprinter import IndentPrinter
-from torchWork import DEVICE
+from torchWork import DEVICE, CPU
 from torchWork.loss_weight_tree import LossWeightTree
 
 __all__ = ['LossTree', 'AbstractLossNode', 'writeCode']
@@ -28,7 +28,7 @@ class LossTree:
     def sum(
         self, lossWeightTree: LossWeightTree, epoch: int, 
     ):
-        acc = torch.tensor(0, dtype=torch.float32)
+        acc = torch.tensor(0, dtype=torch.float32, device=CPU)
         for lossWeightNode in lossWeightTree.children:
             weight = lossWeightNode.getWeight(epoch)
             if weight == 0:
