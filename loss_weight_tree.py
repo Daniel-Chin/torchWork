@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Callable, List, Optional, Union
 
 import torch
-from torchWork import DEVICE
 
 class LossWeightTree:
     def __init__(
