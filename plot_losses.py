@@ -69,6 +69,8 @@ def plotLosses(
     epoch_stop: Optional[int] = None, 
 ):
     fig, axes = plt.subplots(1, len(lossTypes))
+    if len(lossTypes) == 1:
+        axes = [axes]   # crazy matplotlib
     (
         experiment_name, n_rand_inits, groups, 
     ) = loadExperiment(experiment_py_path)
