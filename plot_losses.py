@@ -72,7 +72,7 @@ def plotLosses(
     if len(lossTypes) == 1:
         axes = [axes]   # crazy matplotlib
     (
-        experiment_name, n_rand_inits, groups, 
+        experiment_name, n_rand_inits, groups, _, 
     ) = loadExperiment(experiment_py_path)
     print(f'{experiment_name = }')
     group_start = epoch_start // average_over

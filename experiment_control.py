@@ -1,6 +1,6 @@
 import os
 from os import path
-from typing import Callable, Dict, Optional, Tuple, Type, List
+from typing import Any, Callable, Dict, Optional, Tuple, Type, List
 from datetime import datetime
 from time import perf_counter
 import importlib.util
@@ -56,7 +56,7 @@ def roundRobinSched(n_workers):
         ages[elected] += end - start
 
 def loadExperiment(experiment_py_path) -> Tuple[
-    str, int, List[ExperimentGroup], 
+    str, int, List[ExperimentGroup], Any, 
 ]:
     spec = importlib.util.spec_from_file_location(
         "experiment", experiment_py_path, 
@@ -67,6 +67,7 @@ def loadExperiment(experiment_py_path) -> Tuple[
         experiment.EXP_NAME, 
         experiment.N_RAND_INITS, 
         experiment.GROUPS, 
+        experiment, 
     )
 
 def getCommitHash():
@@ -82,7 +83,7 @@ def runExperiment(
     save_path: str = './experiments', 
 ):
     (
-        experiment_name, n_rand_inits, groups, 
+        experiment_name, n_rand_inits, groups, experiment, 
     ) = loadExperiment(current_experiment_path)
 
     names = set()
@@ -135,6 +136,7 @@ def runExperiment(
                 trainSet, validateSet, 
                 trainer.lossLogger, profiler, 
                 trainer.save_path, trainer_i, 
+                experiment, 
             )
         trainer.epoch += 1
 
