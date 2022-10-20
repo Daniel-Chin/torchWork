@@ -97,7 +97,7 @@ def runExperiment(
     exp_path = path.join(
         path.abspath(save_path), 
         experiment_name + '_' + datetime.now().strftime(
-            '%Y_%b_%d_%H;%M;%S', 
+            '%Y_%b_%d@%H_%M_%S', 
         ), 
     )
     os.makedirs(exp_path)
