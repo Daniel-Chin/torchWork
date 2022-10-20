@@ -6,6 +6,18 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import hsv_to_rgb
 from tqdm import tqdm
 
+try:
+    from graphic_terminal import rollText
+except ImportError as e:
+    module_name = str(e).split('No module named ', 1)[1].strip().strip('"\'')
+    if module_name in (
+        'graphic_terminal', 
+    ):
+        print(f'Missing module {module_name}. Please download at')
+        print(f'https://github.com/Daniel-Chin/Python_Lib')
+        input('Press Enter to quit...')
+    raise e
+
 from torchWork.experiment_control import loadExperiment, getGroupPath
 from torchWork.loss_logger import Decompressor, LOSS_FILE_NAME
 
@@ -16,7 +28,13 @@ class LossType:
         self.train_or_validate = train_or_validate
         self.loss_name = loss_name
 
-        self.display_name = train_or_validate + '_' + loss_name
+        self.display_name = self.prettify(
+            train_or_validate + '_' + loss_name, 
+        )
+    
+    def prettify(self, x: str, /):
+        x = x.replace('_', ' ')
+        return '\n'.join(rollText(x, 20))
     
     def __hash__(self):
         return hash(self.display_name)
