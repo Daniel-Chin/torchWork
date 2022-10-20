@@ -14,4 +14,4 @@ def getGradNorm(params: List[torch.Tensor]):
     buffer = torch.zeros((len(params), ), device=DEVICE)
     for i, param in enumerate(params):
         buffer[i] = param.grad.norm(2)
-    return buffer.norm(2)
+    return buffer.norm(2).cpu()
