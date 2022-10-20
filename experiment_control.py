@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import torch.utils.data
 from torch import nn
-from torchWork import BaseHyperParams, LossLogger, Profiler, DEVICE
+from torchWork import BaseHyperParams, LossLogger, Profiler, DEVICE, HAS_CUDA
 import git
 
 EXPERIMENT_PY_FILENAME = 'experiment.py'
@@ -126,6 +126,11 @@ def runExperiment(
             trainers.append(trainer)
 
     print('Training starts...', flush=True)
+    if HAS_CUDA:
+        a = torch.zeros((3, ), device=DEVICE)
+        b = a + 3
+        b.backward()
+        torch.cuda.synchronize()    # just for profiling
     profiler = Profiler()
     while trainers:
         for trainer_i in roundRobinSched(len(trainers)):
