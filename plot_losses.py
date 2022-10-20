@@ -68,7 +68,7 @@ def plotLosses(
     average_over: int, epoch_start: int, 
     epoch_stop: Optional[int] = None, 
 ):
-    fig, axes = plt.subplots(1, len(lossTypes))
+    fig, axes = plt.subplots(len(lossTypes), 1, sharex=True)
     if len(lossTypes) == 1:
         axes = [axes]   # crazy matplotlib
     (
@@ -121,11 +121,11 @@ def plotLosses(
                 c=hsv_to_rgb((group_i / len(groups) * .8, 1, .8)), 
                 **kw, 
             )
-            ax.set_title(lossType.display_name)
+            ax.set_ylabel(lossType.display_name)
     for ax in axes:
         ax.axhline(y=0, color='k')
-        ax.set_xlabel('epoch')
     axes[-1].legend()
+    axes[-1].set_xlabel('epoch')
     fig.tight_layout()
     return fig
 
