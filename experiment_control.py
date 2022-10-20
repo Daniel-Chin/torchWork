@@ -76,7 +76,7 @@ def getCommitHash():
 
 def runExperiment(
     current_experiment_path: str, 
-    oneEpoch: Callable, 
+    oneEpoch: Callable[[Any], bool], 
     modelClasses: Dict[str, Type[nn.Module]], 
     trainSet   : torch.utils.data.Dataset, 
     validateSet: torch.utils.data.Dataset, 
@@ -127,18 +127,23 @@ def runExperiment(
 
     print('Training starts...', flush=True)
     profiler = Profiler()
-    for trainer_i in roundRobinSched(len(trainers)):
-        trainer: Trainer = trainers[trainer_i]
-        with profiler('oneEpoch'):
-            oneEpoch(
-                trainer.name, trainer.epoch, 
-                experiment, trainer.hyperParams, 
-                trainer.models, trainer.optim, 
-                trainSet, validateSet, 
-                trainer.lossLogger, profiler, 
-                trainer.save_path, trainer_i, 
-            )
-        trainer.epoch += 1
+    while trainers:
+        for trainer_i in roundRobinSched(len(trainers)):
+            trainer: Trainer = trainers[trainer_i]
+            with profiler('oneEpoch'):
+                do_continue = oneEpoch(
+                    trainer.name, trainer.epoch, 
+                    experiment, trainer.hyperParams, 
+                    trainer.models, trainer.optim, 
+                    trainSet, validateSet, 
+                    trainer.lossLogger, profiler, 
+                    trainer.save_path, trainer_i, 
+                )
+                if not do_continue:
+                    trainers.pop(trainer_i)
+                    break
+            trainer.epoch += 1
+    print('All trainers stopped.', flush=True)
 
 def getGroupPath(
     experiment_path: str, group_name: str, rand_init_i: int, 
