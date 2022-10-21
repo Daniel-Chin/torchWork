@@ -129,7 +129,7 @@ def runExperiment(
     if HAS_CUDA:
         a = torch.zeros((3, ), device=DEVICE, requires_grad=True)
         b = a + 3
-        b.backward()
+        b.sum().backward()
         torch.cuda.synchronize()    # just for profiling
     profiler = Profiler()
     while trainers:
