@@ -82,6 +82,7 @@ def runExperiment(
     validateSet: torch.utils.data.Dataset, 
     save_path: str = './experiments', 
 ):
+    print('Loading experiment...', flush=True)
     (
         experiment_name, n_rand_inits, groups, experiment, 
     ) = loadExperiment(current_experiment_path)
@@ -109,6 +110,7 @@ def runExperiment(
     ), 'w') as f:
         print(getCommitHash(), file=f)
     
+    print('Initing trainers...', flush=True)
     trainers = []
     for group in groups:
         for rand_init_i in range(n_rand_inits):
@@ -125,12 +127,13 @@ def runExperiment(
             )
             trainers.append(trainer)
 
-    print('Training starts...', flush=True)
+    print('Syncing GPU...', flush=True)
     if HAS_CUDA:
         a = torch.zeros((3, ), device=DEVICE, requires_grad=True)
         b = a + 3
         b.sum().backward()
         torch.cuda.synchronize()    # just for profiling
+    print('Training starts...', flush=True)
     profiler = Profiler()
     while trainers:
         for trainer_i in roundRobinSched(len(trainers)):
