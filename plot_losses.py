@@ -109,7 +109,7 @@ def plotLosses(
                 epoch_i, batch_i, train_or_validate, _, entries, 
             ) in Decompressor(path.join(getGroupPath(
                 path.dirname(experiment_py_path), 
-                group.name(), rand_init_i, 
+                group.pathName(), rand_init_i, 
             ), LOSS_FILE_NAME)):
                 oCoE.eat(epoch_i)
                 for loss_name, value in entries.items():

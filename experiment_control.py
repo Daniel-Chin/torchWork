@@ -21,9 +21,16 @@ class ExperimentGroup(ABC):
         self.hyperParams = hyperParams
     
     @abstractmethod
-    def name(self):
+    def name(self) -> str:
         # Override this method!
         raise NotImplemented
+    
+    def pathName(self):
+        return self.name() \
+            .replace(':', '-') \
+            .replace('<', '(') \
+            .replace('>', ')') \
+            .replace(' ', '') \
     
 class Trainer:
     def __init__(
@@ -87,14 +94,15 @@ def runExperiment(
         experiment_name, n_rand_inits, groups, experiment, 
     ) = loadExperiment(current_experiment_path)
 
-    names = set()
+    path_names = set()
     for group in groups:
-        name = group.name()
-        if name in names:
+        path_name = group.pathName()
+        if path_name in path_names:
             raise ValueError(
                 f'Multiple experiment groups named "{name}"', 
             )
-        names.add(name)
+        path_names.add(path_name)
+    del path_names
     exp_path = path.join(
         path.abspath(save_path), 
         datetime.now().strftime(
@@ -118,7 +126,7 @@ def runExperiment(
             for name, ModelClass in modelClasses.items():
                 models[name] = ModelClass(group.hyperParams).to(DEVICE)
             group_path = getGroupPath(
-                exp_path, group.name(), rand_init_i, 
+                exp_path, group.pathName(), rand_init_i, 
             )
             trainer_name = path.split(group_path)[-1]
             trainer = Trainer(
@@ -154,11 +162,11 @@ def runExperiment(
     print('All trainers stopped.', flush=True)
 
 def getGroupPath(
-    experiment_path: str, group_name: str, rand_init_i: int, 
+    experiment_path: str, group_path_name: str, rand_init_i: int, 
 ):
     return path.join(
         experiment_path, 
-        group_name + f'_rand_{rand_init_i}', 
+        group_path_name + f'_rand_{rand_init_i}', 
     )
 
 def saveModels(models: Dict[str, nn.Module], epoch, save_path):
@@ -177,7 +185,7 @@ def loadLatestModels(
     for name, ModelClass in modelClasses.items():
         models[name] = ModelClass(group.hyperParams).to(DEVICE)
     
-    group_path = getGroupPath(experiment_path, group.name(), rand_init_i)
+    group_path = getGroupPath(experiment_path, group.pathName(), rand_init_i)
     if lock_epoch is None:
         max_epoch = 0
         for filename in os.listdir(group_path):
