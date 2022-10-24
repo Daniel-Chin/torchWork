@@ -20,6 +20,9 @@ class LossWeightTree:
                 return child
         raise KeyError(f'{key} not found.')
     
+    def __contains__(self, key):
+        return key in [x.name for x in self.children]
+    
     def getWeight(self, epoch: int):
         try:
             return self.weight(epoch)
