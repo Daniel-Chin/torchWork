@@ -41,7 +41,7 @@ def main():
         return
 
     hyperParams = HyperParams()
-    hyperParams.loss_weight_tree = LossWeightTree('total', 1, [
+    hyperParams.lossWeightTree = LossWeightTree('total', 1, [
         LossWeightTree('vae', .5, [
             LossWeightTree('reconstruct', .9, None), 
             LossWeightTree('kld', .1, None), 
@@ -55,6 +55,7 @@ def main():
         ]), 
         LossWeightTree('weight_decay', .1, None), 
     ])
+    print(hyperParams.lossWeightTree)
     hyperParams.rnn_width = 8
     hyperParams.do_grad_clip = True
     hyperParams.grad_clip_ceil = 1
@@ -63,20 +64,20 @@ def main():
     hyperParams.expand()
 
     total_loss = Total_loss()
-    total_loss.vae.reconstruct = 1
-    total_loss.vae.kld = 2
-    total_loss.vrnn.predict.z = 3
-    total_loss.vrnn.predict.image = 4
-    total_loss.vrnn.kld = 5
-    total_loss.weight_decay = 6
-    print('loss sum:', total_loss.sum(hyperParams.loss_weight_tree, epoch=0))
-
-    lossLogger = LossLogger('.')
-    lossLogger.clearFile()
-    lossLogger.eat(0, 0, True, total_loss, hyperParams.loss_weight_tree)
-    lossLogger.eat(0, 1, True, total_loss + total_loss, hyperParams.loss_weight_tree)
+    total_loss.vae.reconstruct = torch.tensor(1)
+    total_loss.vae.kld = torch.tensor(2)
+    total_loss.vrnn.predict.z = torch.tensor(3)
+    total_loss.vrnn.predict.image = torch.tensor(4)
+    total_loss.vrnn.kld = torch.tensor(5)
+    total_loss.weight_decay = torch.tensor(6)
+    print('loss sum:', total_loss.sum(hyperParams.lossWeightTree, epoch=0))
 
     profiler = Profiler()
+    lossLogger = LossLogger('.')
+    lossLogger.clearFile()
+    lossLogger.eat(0, 0, True, profiler, total_loss, hyperParams.lossWeightTree)
+    lossLogger.eat(0, 1, True, profiler, total_loss + total_loss, hyperParams.lossWeightTree)
+
     for i in range(4):
         # dumb slow code
         sleep(.1)
