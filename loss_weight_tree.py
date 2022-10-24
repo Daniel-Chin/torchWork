@@ -14,6 +14,15 @@ class LossWeightTree:
         self.weight = weight
         self.children = children
     
+    def __repr__(self):
+        # if self.children is None:
+        #     return f'{self.weight}_{self.name}'
+        # else:
+        #     return f'''{self.weight}x({"+".join([
+        #         repr(x) for x in self.children
+        #     ])})'''
+        return repr(self.weight)
+    
     def __getitem__(self, key):
         for child in self.children:
             if child.name == key:
