@@ -19,3 +19,29 @@ class BaseHyperParams:
                     print(' ' * depth, '}', sep='')
                 else:
                     print(v)
+    
+    def copy(self):
+        other = __class__()
+        for k, v in self.__dict__.items():
+            do_copy, v_copy = self.copyOneParam(k, v)
+            if do_copy:
+                other.__setattr__(k, v_copy)
+        return other
+
+    TYPES_IMMUTABLE = [
+        float, int, bool, str, type(None), 
+    ]
+    TYPES_CALL_COPY = [LossWeightTree]
+    def copyOneParam(self, k: str, v):
+        if k.startswith('_') or callable(v):
+            return False, None
+        _type = type(v)
+        if _type in __class__.TYPES_IMMUTABLE:
+            return True, v
+        if _type in __class__.TYPES_CALL_COPY:
+            return True, v.copy()
+        if k == 'OptimClass':
+            return True, v
+        raise TypeError(
+            f'Don\'t know whether/how to copy "{k}": {v}', 
+        )

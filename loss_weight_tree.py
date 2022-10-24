@@ -44,3 +44,10 @@ class LossWeightTree:
         print(' ' * depth, self.name, ': ', self.weight, sep='')
         for child in self.children or []:
             child.print(depth + 1)
+
+    def copy(self):
+        if self.children is None:
+            children = None
+        else:
+            children = [x.copy() for x in self.children]
+        return __class__(self.name, self.weight, children)
