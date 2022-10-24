@@ -21,7 +21,7 @@ class BaseHyperParams:
                     print(v)
     
     def copy(self):
-        other = __class__()
+        other = self.__class__()
         for k, v in self.__dict__.items():
             do_copy, v_copy = self.copyOneParam(k, v)
             if do_copy:
@@ -42,6 +42,13 @@ class BaseHyperParams:
             return True, v.copy()
         if k == 'OptimClass':
             return True, v
+        if _type in (list, tuple):
+            if all([
+                type(x) in __class__.TYPES_IMMUTABLE for x in v
+            ]):
+                return True, v.copy()
+            from console import console
+            console({**globals(), **locals()})
         raise TypeError(
             f'Don\'t know whether/how to copy "{k}": {v}', 
         )
