@@ -99,7 +99,7 @@ def runExperiment(
         path_name = group.pathName()
         if path_name in path_names:
             raise ValueError(
-                f'Multiple experiment groups named "{name}"', 
+                f'Multiple experiment groups named "{path_name}"', 
             )
         path_names.add(path_name)
     del path_names
