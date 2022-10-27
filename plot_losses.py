@@ -85,6 +85,7 @@ def plotLosses(
     experiment_py_path: str, lossTypes: List[LossType], 
     average_over: int, epoch_start: int, 
     epoch_stop: Optional[int] = None, 
+    which_legend: int = -1, **style_kw, 
 ):
     fig, axes = plt.subplots(len(lossTypes), 1, sharex=True)
     if len(lossTypes) == 1:
@@ -137,12 +138,12 @@ def plotLosses(
                 epochs[group_start:group_stop], 
                 lossAcc.getHistory()[group_start:group_stop], 
                 c=hsv_to_rgb((group_i / len(groups) * .8, 1, .8)), 
-                **kw, 
+                **kw, **style_kw, 
             )
             ax.set_ylabel(lossType.display_name)
     for ax in axes:
         ax.axhline(y=0, color='k')
-    axes[-1].legend()
+    axes[which_legend].legend()
     axes[-1].set_xlabel('epoch')
     fig.tight_layout()
     return fig
