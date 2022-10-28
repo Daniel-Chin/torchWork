@@ -145,6 +145,7 @@ def plotLosses(
         ax.axhline(y=0, color='k')
     axes[which_legend].legend()
     axes[-1].set_xlabel('epoch')
+    fig.suptitle(experiment_name)
     fig.tight_layout()
     return fig
 
