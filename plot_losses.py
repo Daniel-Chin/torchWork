@@ -18,7 +18,7 @@ except ImportError as e:
         input('Press Enter to quit...')
     raise e
 
-from torchWork.experiment_control import loadExperiment, getGroupPath
+from torchWork.experiment_control import loadExperiment, getTrainerPath
 from torchWork.loss_logger import Decompressor, LOSS_FILE_NAME
 
 class LossType:
@@ -108,7 +108,7 @@ def plotLosses(
         ]) as oCoE:
             for (
                 epoch_i, batch_i, train_or_validate, _, entries, 
-            ) in Decompressor(path.join(getGroupPath(
+            ) in Decompressor(path.join(getTrainerPath(
                 path.dirname(experiment_py_path), 
                 group.pathName(), rand_init_i, 
             ), LOSS_FILE_NAME)):

@@ -36,22 +36,46 @@ class Trainer:
     def __init__(
         self, hyperParams: BaseHyperParams, 
         models: Dict[str, nn.Module], save_path, name, 
+        do_clear_log=True, do_mkdir=True, epoch=0, 
     ) -> None:
         self.hyperParams = hyperParams
         self.models = models
         self.save_path = save_path
         self.name = name
+        self.epoch = epoch
 
-        self.epoch = 0
         all_params = []
         for model in models.values():
             all_params.extend(model.parameters())
         self.optim = hyperParams.OptimClass(
             all_params, lr=hyperParams.lr, 
         )
-        os.mkdir(save_path)
+        if do_mkdir:
+            os.mkdir(save_path)
         self.lossLogger = LossLogger(save_path)
-        self.lossLogger.clearFile()
+        if do_clear_log:
+            self.lossLogger.clearFile()
+    
+    @staticmethod
+    def loadFromDisk(
+        group: ExperimentGroup, 
+        modelClasses: Dict[str, Type[nn.Module]], 
+        trainer_path, trainer_name, rand_init_i, 
+        lock_epoch: Optional[int] = None, 
+    ):
+        # Doesn't preserve the optim.  
+        experiment_path = path.abspath(path.join(
+            trainer_path, '..', 
+        ))
+        epoch, models = loadLatestModels(
+            experiment_path, group, rand_init_i, 
+            modelClasses, lock_epoch, 
+        )
+
+        return __class__(
+            group.hyperParams, models, trainer_path, 
+            trainer_name, False, False, epoch, 
+        )
     
 def roundRobinSched(n_workers):
     ages = np.zeros((n_workers, ))
@@ -88,12 +112,14 @@ def runExperiment(
     trainSet   : torch.utils.data.Dataset, 
     validateSet: torch.utils.data.Dataset, 
     save_path: str = './experiments', 
+    continue_from: Optional[str] = None, 
 ):
     print('Loading experiment...', flush=True)
     (
         experiment_name, n_rand_inits, groups, experiment, 
     ) = loadExperiment(current_experiment_path)
 
+    # check for collision
     path_names = set()
     for group in groups:
         path_name = group.pathName()
@@ -103,36 +129,45 @@ def runExperiment(
             )
         path_names.add(path_name)
     del path_names
-    exp_path = path.join(
-        path.abspath(save_path), 
-        datetime.now().strftime(
+
+    if continue_from is None:
+        exp_dir = datetime.now().strftime(
             '%Y_m%m_d%d@%H_%M_%S', 
-        ) + '_' + experiment_name, 
-    )
-    os.makedirs(exp_path)
-    shutil.copy(current_experiment_path, path.join(
-        exp_path, EXPERIMENT_PY_FILENAME, 
-    ))
+        ) + '_' + experiment_name
+    else:
+        exp_dir = continue_from
+    exp_path = path.join(path.abspath(save_path), exp_dir)
+    if continue_from is None:
+        os.makedirs(exp_path)
+        shutil.copy(current_experiment_path, path.join(
+            exp_path, EXPERIMENT_PY_FILENAME, 
+        ))
     with open(path.join(
         exp_path, 'commit_hash.txt', 
-    ), 'w') as f:
+    ), 'a') as f:
         print(getCommitHash(), file=f)
     
     print('Initing trainers...', flush=True)
     trainers = []
     for group in groups:
         for rand_init_i in range(n_rand_inits):
-            models = {}
-            for name, ModelClass in modelClasses.items():
-                models[name] = ModelClass(group.hyperParams).to(DEVICE)
-            group_path = getGroupPath(
+            models = instantiateModels(
+                modelClasses, group.hyperParams, 
+            )
+            trainer_path = getTrainerPath(
                 exp_path, group.pathName(), rand_init_i, 
             )
-            trainer_name = path.split(group_path)[-1]
-            trainer = Trainer(
-                group.hyperParams, models, 
-                group_path, trainer_name, 
-            )
+            trainer_name = path.split(trainer_path)[-1]
+            if continue_from is None:
+                trainer = Trainer(
+                    group.hyperParams, models, 
+                    trainer_path, trainer_name, 
+                )
+            else:
+                trainer = Trainer.loadFromDisk(
+                    group, modelClasses, 
+                    trainer_path, trainer_name, rand_init_i, 
+                )
             trainers.append(trainer)
 
     print('Syncing GPU...', flush=True)
@@ -161,7 +196,7 @@ def runExperiment(
             trainer.epoch += 1
     print('All trainers stopped.', flush=True)
 
-def getGroupPath(
+def getTrainerPath(
     experiment_path: str, group_path_name: str, rand_init_i: int, 
 ):
     return path.join(
@@ -181,14 +216,16 @@ def loadLatestModels(
     modelClasses: Dict[str, Type[nn.Module]], 
     lock_epoch: Optional[int]=None, 
 ):
-    models: Dict[str, nn.Module] = {}
-    for name, ModelClass in modelClasses.items():
-        models[name] = ModelClass(group.hyperParams).to(DEVICE)
+    models = instantiateModels(
+        modelClasses, group.hyperParams, 
+    )
     
-    group_path = getGroupPath(experiment_path, group.pathName(), rand_init_i)
+    trainer_path = getTrainerPath(
+        experiment_path, group.pathName(), rand_init_i, 
+    )
     if lock_epoch is None:
         max_epoch = 0
-        for filename in os.listdir(group_path):
+        for filename in os.listdir(trainer_path):
             try:
                 x = filename.split('_epoch_')[1]
                 x = x.split('.pt')[0]
@@ -203,6 +240,15 @@ def loadLatestModels(
     print('taking epoch', epoch)
     for name, model in models.items():
         model.load_state_dict(torch.load(path.join(
-            group_path, f'{name}_epoch_{epoch}.pt', 
+            trainer_path, f'{name}_epoch_{epoch}.pt', 
         ), map_location=DEVICE))
+    return epoch, models
+
+def instantiateModels(
+    modelClasses: Dict[str, Type[nn.Module]], 
+    hyperParams: BaseHyperParams, 
+):
+    models: Dict[str, nn.Module] = {}
+    for name, ModelClass in modelClasses.items():
+        models[name] = ModelClass(hyperParams).to(DEVICE)
     return models
