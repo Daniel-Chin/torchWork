@@ -1,6 +1,7 @@
-from time import perf_counter
+from time import perf_counter, time
 from threading import Lock
 from contextlib import contextmanager
+from typing import Optional
 
 from tabulate import tabulate
 
@@ -10,6 +11,8 @@ class Profiler:
         self.acc = {}
         self.current_tags = set()
         self.lock = Lock()
+
+        self.last_report = None
 
     @contextmanager
     def __call__(self, *tags: str):
@@ -34,7 +37,15 @@ class Profiler:
                     self.acc[tag] = 0
                 self.acc[tag] += dt
     
-    def report(self):
+    def report(self, throttle: Optional[int] = 3):
+        if throttle is not None:
+            if self.last_report is None:
+                pass
+            elif time() - self.last_report >= throttle:
+                pass
+            else:
+                return
+        self.last_report = time()
         print('Profiler:')
         with self.lock:
             T = perf_counter() - self.start
