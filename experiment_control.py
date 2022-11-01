@@ -170,12 +170,6 @@ def runExperiment(
                 )
             trainers.append(trainer)
 
-    print('Syncing GPU...', flush=True)
-    if HAS_CUDA:
-        a = torch.zeros((3, ), device=DEVICE, requires_grad=True)
-        b = a + 3
-        b.sum().backward()
-        torch.cuda.synchronize()    # just for profiling
     print('Training starts...', flush=True)
     profiler = Profiler()
     while trainers:

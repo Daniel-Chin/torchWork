@@ -3,7 +3,10 @@ from threading import Lock
 from contextlib import contextmanager
 from typing import Optional
 
+import torch
 from tabulate import tabulate
+
+from torchWork import HAS_CUDA, DEVICE
 
 class Profiler:
     def __init__(self) -> None:
@@ -13,6 +16,13 @@ class Profiler:
         self.lock = Lock()
 
         self.last_report = None
+        
+        print('Syncing GPU...', flush=True)
+        if HAS_CUDA:
+            a = torch.zeros((3, ), device=DEVICE, requires_grad=True)
+            b = a + 3
+            b.sum().backward()
+            torch.cuda.synchronize()
 
     @contextmanager
     def __call__(self, *tags: str):
@@ -21,10 +31,12 @@ class Profiler:
             if intersection:
                 raise ValueError(f'Cannot enter twice: {intersection}')
             self.current_tags.update(tags)
+        torch.cuda.synchronize()
         start = perf_counter()
         try:
             yield None
         finally:
+            torch.cuda.synchronize()
             dt = perf_counter() - start
             self.__accTime(tags, dt)
             with self.lock:
