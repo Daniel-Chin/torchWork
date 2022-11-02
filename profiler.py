@@ -31,12 +31,14 @@ class Profiler:
             if intersection:
                 raise ValueError(f'Cannot enter twice: {intersection}')
             self.current_tags.update(tags)
-        torch.cuda.synchronize()
+        if HAS_CUDA:
+            torch.cuda.synchronize()
         start = perf_counter()
         try:
             yield None
         finally:
-            torch.cuda.synchronize()
+            if HAS_CUDA:
+                torch.cuda.synchronize()
             dt = perf_counter() - start
             self.__accTime(tags, dt)
             with self.lock:
