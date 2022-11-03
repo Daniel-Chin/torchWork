@@ -80,6 +80,7 @@ class LossLogger:
     def clearFile(self):
         with open(self.filename, 'wb'):
             pass
+        self.compressor.should_write_headers = True
 
 class Compressor:
     def __init__(self, filename: str) -> None:
@@ -87,6 +88,7 @@ class Compressor:
         self.keys: Optional[List[str]] = None
         self.struct_format: Optional[str] = None
 
+        self.should_write_headers = False
         self.buffered_keys = []
         self.buffered_values: List[float] = []
         self.now_batch = None
@@ -108,7 +110,8 @@ class Compressor:
         f = self.io
         if self.keys is None:
             self.keys = self.buffered_keys.copy()
-            pickle.dump(self.keys, f)
+            if self.should_write_headers:
+                pickle.dump(self.keys, f)
             self.struct_format = '!II?' + 'f' * len(self.keys)
         assert self.keys == self.buffered_keys
         epoch_i, batch_i, train_or_validate = self.now_batch
