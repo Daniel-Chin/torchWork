@@ -100,7 +100,7 @@ def plotLosses(
     else:
         group_stop = epoch_stop // average_over
     for (group_i, group), rand_init_i in tqdm([*itertools.product(
-        enumerate(groups), range(1), 
+        enumerate(groups), range(n_rand_inits), 
     )]):
         lossAccs = {x: LossAcc(average_over) for x in lossTypes}
         with OnChangeOrEnd(*[
