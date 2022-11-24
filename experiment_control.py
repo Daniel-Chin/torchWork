@@ -170,8 +170,8 @@ def runExperiment(
                 )
             trainers.append(trainer)
 
-    print('Training starts...', flush=True)
     profiler = Profiler()
+    print('Training starts...', flush=True)
     while trainers:
         for trainer_i in roundRobinSched(len(trainers)):
             trainer: Trainer = trainers[trainer_i]

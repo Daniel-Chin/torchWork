@@ -17,8 +17,8 @@ class Profiler:
 
         self.last_report = None
         
-        print('Syncing GPU...', flush=True)
         if HAS_CUDA:
+            print('Syncing GPU...', flush=True)
             a = torch.zeros((3, ), device=DEVICE, requires_grad=True)
             b = a + 3
             b.sum().backward()
