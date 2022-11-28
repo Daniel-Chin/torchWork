@@ -33,6 +33,9 @@ class BaseHyperParams:
     ]
     TYPES_CALL_COPY = [LossWeightTree]
     def copyOneParam(self, k: str, v):
+        '''
+        returns `(do_copy, value_copied)`  
+        '''
         if k.startswith('_') or callable(v):
             return False, None
         _type = type(v)
