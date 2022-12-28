@@ -1,5 +1,5 @@
 from os import path
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple, Dict
 import itertools
 
 from matplotlib import pyplot as plt
@@ -18,7 +18,7 @@ except ImportError as e:
         input('Press Enter to quit...')
     raise e
 
-from torchWork.experiment_control import loadExperiment, getTrainerPath
+from torchWork.experiment_control import loadExperiment, getTrainerPath, ExperimentGroup
 from torchWork.loss_logger import Decompressor, LOSS_FILE_NAME
 
 class LossType:
@@ -81,15 +81,12 @@ class LossAcc:
         assert self.batch_acc == 0
         return self.__losses
 
-def plotLosses(
+def PlotLosses(
     experiment_py_path: str, lossTypes: List[LossType], 
     average_over: int, epoch_start: int, 
     epoch_stop: Optional[int] = None, 
     which_legend: int = -1, **style_kw, 
 ):
-    fig, axes = plt.subplots(len(lossTypes), 1, sharex=True)
-    if len(lossTypes) == 1:
-        axes = [axes]   # crazy matplotlib
     (
         experiment_name, n_rand_inits, groups, _, 
     ) = loadExperiment(experiment_py_path)
@@ -99,6 +96,7 @@ def plotLosses(
         group_stop = None
     else:
         group_stop = epoch_stop // average_over
+    data: List[Tuple[int, ExperimentGroup, int, List[int], Dict[LossType, LossAcc]]] = []
     for (group_i, group), rand_init_i in tqdm([*itertools.product(
         enumerate(groups), range(n_rand_inits), 
     )]):
@@ -127,28 +125,44 @@ def plotLosses(
         epochs = [(i + 1) * average_over for i in range(
             next(iter(lossAccs.values())).n_groups, 
         )]
-        if rand_init_i == 0:
-            kw = dict(label=group.name())
-        else:
-            kw = dict()
-        for ax, (lossType, lossAcc) in zip(
-            axes, lossAccs.items(), 
-        ):
-            ax.plot(
-                epochs[group_start:group_stop], 
-                lossAcc.getHistory()[group_start:group_stop], 
-                c=hsv_to_rgb((group_i / len(groups) * .8, 1, .8)), 
-                **kw, **style_kw, 
-            )
-            ax.set_ylabel(lossType.display_name)
-    for ax in axes:
-        # ax.axhline(y=0, color='k')
-        ax.set_ylim(bottom=0)
-    axes[which_legend].legend()
-    axes[-1].set_xlabel('epoch')
-    fig.suptitle(experiment_name)
-    fig.tight_layout()
-    return fig
+        data.append((
+            group_i, group, rand_init_i, 
+            epochs, lossAccs, 
+        ))
+
+    for rand_init_i_to_plot in (None, *range(n_rand_inits)):
+        fig, axes = plt.subplots(len(lossTypes), 1, sharex=True)
+        if len(lossTypes) == 1:
+            axes = [axes]   # crazy matplotlib
+        for (
+            group_i, group, rand_init_i, 
+            epochs, lossAccs, 
+        ) in data:
+            if rand_init_i_to_plot is not None and rand_init_i != rand_init_i_to_plot:
+                continue
+            if rand_init_i == 0 or rand_init_i_to_plot is not None:
+                kw = dict(label=group.name())
+            else:
+                kw = dict()
+            for ax, (lossType, lossAcc) in zip(
+                axes, lossAccs.items(), 
+            ):
+                ax.plot(
+                    epochs[group_start:group_stop], 
+                    lossAcc.getHistory()[group_start:group_stop], 
+                    c=hsv_to_rgb((group_i / len(groups) * .8, 1, .8)), 
+                    **kw, **style_kw, 
+                )
+                ax.set_ylabel(lossType.display_name)
+        # for ax in axes:
+            # ax.axhline(y=0, color='k')
+            # ax.set_ylim(bottom=0)
+            # Both will hide a loss=0 curve. 
+        axes[which_legend].legend()
+        axes[-1].set_xlabel('epoch')
+        fig.suptitle(experiment_name)
+        fig.tight_layout()
+        yield fig
 
 class OnChangeOrEnd:
     def __init__(self, *callbacks: Callable) -> None:

@@ -10,4 +10,4 @@ from torchWork.experiment_control import (
     ExperimentGroup, runExperiment, loadExperiment, 
     saveModels, loadLatestModels, 
 )
-from torchWork.plot_losses import plotLosses
+from torchWork.plot_losses import PlotLosses
