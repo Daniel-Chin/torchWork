@@ -142,7 +142,8 @@ def plotLosses(
             )
             ax.set_ylabel(lossType.display_name)
     for ax in axes:
-        ax.axhline(y=0, color='k')
+        # ax.axhline(y=0, color='k')
+        ax.set_ylim(bottom=0)
     axes[which_legend].legend()
     axes[-1].set_xlabel('epoch')
     fig.suptitle(experiment_name)
