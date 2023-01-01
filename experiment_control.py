@@ -49,6 +49,7 @@ class Trainer:
             all_params.extend(model.parameters())
         self.optim = hyperParams.OptimClass(
             all_params, lr=hyperParams.lr, 
+            weight_decay=hyperParams.weight_decay, 
         )
         if do_mkdir:
             os.mkdir(save_path)

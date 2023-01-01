@@ -8,6 +8,7 @@ class BaseHyperParams:
         self.lossWeightTree: LossWeightTree = None
         self.OptimClass: Type[torch.optim.Optimizer] = None
         self.lr: float = None
+        self.weight_decay: float = None
     
     def print(self, depth=0):
         for k, v in self.__dict__.items():
