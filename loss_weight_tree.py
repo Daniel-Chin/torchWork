@@ -60,3 +60,15 @@ class LossWeightTree:
         else:
             children = [x.copy() for x in self.children]
         return __class__(self.name, self.weight, children)
+    
+    def errorAboutWeight(*_):
+        raise TypeError('You are probably forgetting `.weight`')
+    def __init_class__(cls):
+        for operator in (
+            '__bool__', '__eq__', '__ne__', 
+            '__lt__', '__le__', 
+            '__gt__', '__ge__', 
+        ):
+            setattr(cls, operator, cls.errorAboutWeight)
+
+LossWeightTree.__init_class__(LossWeightTree)
