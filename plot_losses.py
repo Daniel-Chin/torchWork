@@ -122,6 +122,9 @@ def PlotLosses(
                         pass
                     else:
                         lossAcc.eat(value)
+        for lossType, lossAcc in lossAccs.items():
+            if lossAcc.n_groups == 0:
+                raise ValueError('Did not get any', lossType)
         epochs = [(i + 1) * average_over for i in range(
             next(iter(lossAccs.values())).n_groups, 
         )]
