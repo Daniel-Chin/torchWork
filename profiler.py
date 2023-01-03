@@ -1,5 +1,5 @@
-from time import perf_counter, time
-from threading import Lock
+from time import perf_counter, time, sleep
+from threading import Lock, Thread
 from contextlib import contextmanager
 from typing import Optional
 
@@ -65,3 +65,19 @@ class Profiler:
             T = perf_counter() - self.start
             table = [('', tag, t / T) for tag, t in self.acc.items()]
         print(tabulate(table, floatfmt='3.0%', tablefmt='plain'), flush=True)
+
+class GPUUtilizationReporter(Thread):
+    def __init__(self) -> None:
+        super().__init__()
+        self.go_on = True
+    
+    def run(self):
+        while self.go_on:
+            sleep(1/6)
+            print(
+                'GPU utilization: ', 
+                torch.cuda.utilization(), '%', sep='', 
+            )
+    
+    def close(self):
+        self.go_on = False
