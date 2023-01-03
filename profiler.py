@@ -10,6 +10,7 @@ from torchWork import HAS_CUDA, DEVICE
 
 class Profiler:
     def __init__(self) -> None:
+        self.active = True
         self.start = perf_counter()
         self.acc = {}
         self.current_tags = set()
@@ -26,6 +27,9 @@ class Profiler:
 
     @contextmanager
     def __call__(self, *tags: str):
+        if not self.active:
+            yield None
+            return
         with self.lock:
             intersection = self.current_tags.intersection(tags)
             if intersection:
@@ -52,6 +56,8 @@ class Profiler:
                 self.acc[tag] += dt
     
     def report(self, throttle: Optional[int] = 3):
+        if not self.active:
+            return
         if throttle is not None:
             if self.last_report is None:
                 pass
@@ -72,6 +78,8 @@ class GPUUtilizationReporter(Thread):
         self.go_on = True
     
     def run(self):
+        if not HAS_CUDA:
+            return
         while self.go_on:
             sleep(1/6)
             print(
