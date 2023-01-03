@@ -29,6 +29,16 @@ class LossWeightTree:
                 return child
         raise KeyError(f'{key} not found.')
     
+    def __setitem__(self, key, value):
+        if isinstance(value, __class__):
+            assert value.name == key
+            for child in self.children:
+                if child.name == key:
+                    raise ValueError(f'{key} already exists.')
+            self.children.append(value)
+        else:
+            raise TypeError(f'{__class__.__name__} can only setitem {__class__.__name__}.')
+
     def __contains__(self, key):
         return key in [x.name for x in self.children]
     
