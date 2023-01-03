@@ -21,7 +21,7 @@ class LossWeightTree:
         #     return f'''{self.weight}x({"+".join([
         #         repr(x) for x in self.children
         #     ])})'''
-        return repr(self.weight)
+        return f'<LossWeightTree {self.name} weight={repr(self.weight)}>'
     
     def __getitem__(self, key):
         for child in self.children:
