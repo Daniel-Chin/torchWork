@@ -57,6 +57,7 @@ class Profiler:
     
     def report(self, throttle: Optional[int] = 3):
         if not self.active:
+            print(end='', flush=True)
             return
         if throttle is not None:
             if self.last_report is None:
