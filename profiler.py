@@ -74,15 +74,16 @@ class Profiler:
         print(tabulate(table, floatfmt='3.0%', tablefmt='plain'), flush=True)
 
 class GPUUtilizationReporter(Thread):
-    def __init__(self) -> None:
+    def __init__(self, interval: float) -> None:
         super().__init__()
+        self.interval = interval
         self.go_on = True
     
     def run(self):
         if not HAS_CUDA:
             return
         while self.go_on:
-            sleep(1/6)
+            sleep(self.interval)
             print(
                 'GPU utilization: ', 
                 torch.cuda.utilization(), '%', sep='', 
@@ -90,3 +91,9 @@ class GPUUtilizationReporter(Thread):
     
     def close(self):
         self.go_on = False
+    
+    def __enter__(self):
+        self.start()
+    
+    def __exit__(self, *_):
+        self.close()
