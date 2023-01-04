@@ -35,7 +35,7 @@ class ExperimentGroup(ABC):
 class Trainer:
     def __init__(
         self, hyperParams: BaseHyperParams, 
-        models: Dict[str, nn.Module], save_path, name, 
+        models: Dict[str, List[nn.Module]], save_path, name, 
         do_clear_log=True, do_mkdir=True, epoch=0, 
     ) -> None:
         self.hyperParams = hyperParams
@@ -45,8 +45,9 @@ class Trainer:
         self.epoch = epoch
 
         all_params = []
-        for model in models.values():
-            all_params.extend(model.parameters())
+        for _models in models.values():
+            for model in _models:
+                all_params.extend(model.parameters())
         self.optim = hyperParams.OptimClass(
             all_params, lr=hyperParams.lr, 
             weight_decay=hyperParams.weight_decay, 
@@ -108,8 +109,10 @@ def getCommitHash():
 
 def runExperiment(
     current_experiment_path: str, 
+    requireModelClasses: Callable[[BaseHyperParams], Dict[
+        str, Tuple[Type[nn.Module], int], 
+    ]], 
     oneEpoch: Callable[[Any], bool], 
-    modelClasses: Dict[str, Type[nn.Module]], 
     trainSet   : torch.utils.data.Dataset, 
     validateSet: torch.utils.data.Dataset, 
     save_path: str = './experiments', 
@@ -152,6 +155,7 @@ def runExperiment(
     trainers = []
     for group in groups:
         for rand_init_i in range(n_rand_inits):
+            modelClasses = requireModelClasses(group.hyperParams)
             models = instantiateModels(
                 modelClasses, group.hyperParams, 
             )
@@ -199,16 +203,24 @@ def getTrainerPath(
         group_path_name + f'_rand_{rand_init_i}', 
     )
 
-def saveModels(models: Dict[str, nn.Module], epoch, save_path):
-    for key, model in models.items():
-        torch.save(model.state_dict(), path.join(
-            save_path, f'{key}_epoch_{epoch}.pt', 
-        ))
+def modelFileName(model_name: str, model_i: int, epoch: int):
+    if model_i == 0:
+        i_filename = ''
+    else:
+        i_filename = '_' + str(model_i)
+    return f'{model_name}{i_filename}_epoch_{epoch}.pt'
+
+def saveModels(models: Dict[str, List[nn.Module]], epoch, save_path):
+    for key, _models in models.items():
+        for i, model in enumerate(_models):
+            torch.save(model.state_dict(), path.join(
+                save_path, modelFileName(key, i, epoch), 
+            ))
 
 def loadLatestModels(
     experiment_path: str, group: ExperimentGroup, 
     rand_init_i: int, 
-    modelClasses: Dict[str, Type[nn.Module]], 
+    modelClasses: Dict[str, Tuple[Type[nn.Module], int]], 
     lock_epoch: Optional[int]=None, 
 ):
     models = instantiateModels(
@@ -233,17 +245,21 @@ def loadLatestModels(
     else:
         epoch = lock_epoch
     print('taking epoch', epoch)
-    for name, model in models.items():
-        model.load_state_dict(torch.load(path.join(
-            trainer_path, f'{name}_epoch_{epoch}.pt', 
-        ), map_location=DEVICE))
+    for name, _models in models.items():
+        for i, model in enumerate(_models):
+            model.load_state_dict(torch.load(path.join(
+                trainer_path, modelFileName(name, i, epoch), 
+            ), map_location=DEVICE))
     return epoch, models
 
 def instantiateModels(
-    modelClasses: Dict[str, Type[nn.Module]], 
+    modelClasses: Dict[str, Tuple[Type[nn.Module], int]], 
     hyperParams: BaseHyperParams, 
 ):
-    models: Dict[str, nn.Module] = {}
-    for name, ModelClass in modelClasses.items():
-        models[name] = ModelClass(hyperParams).to(DEVICE)
+    models: Dict[str, List[nn.Module]] = {}
+    for name, (ModelClass, n) in modelClasses.items():
+        models[name] = [
+            ModelClass(hyperParams).to(DEVICE)
+            for _ in range(n)
+        ]
     return models
