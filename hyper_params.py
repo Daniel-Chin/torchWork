@@ -10,9 +10,13 @@ class BaseHyperParams:
         self.lr: float = None
         self.weight_decay: float = None
     
-    def print(self, depth=0):
+    def print(self, depth=0, exclude=None):
+        exclude = exclude or []
         for k, v in self.__dict__.items():
-            if not k.startswith('_') and not callable(v):
+            if (
+                not k.startswith('_') and not callable(v)
+                and k not in exclude
+            ):
                 print(' ' * depth, k, ': ', sep='', end=' ')
                 if isinstance(v, LossWeightTree):
                     print('{')
