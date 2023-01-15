@@ -221,7 +221,7 @@ def loadLatestModels(
     experiment_path: str, group: ExperimentGroup, 
     rand_init_i: int, 
     modelClasses: Dict[str, Tuple[Type[nn.Module], int]], 
-    lock_epoch: Optional[int]=None, 
+    lock_epoch: Optional[int]=None, verbose: bool=True, 
 ):
     models = instantiateModels(
         modelClasses, group.hyperParams, 
@@ -244,7 +244,8 @@ def loadLatestModels(
         epoch = max_epoch
     else:
         epoch = lock_epoch
-    print('taking epoch', epoch)
+    if verbose:
+        print('taking epoch', epoch)
     for name, _models in models.items():
         for i, model in enumerate(_models):
             model.load_state_dict(torch.load(path.join(
