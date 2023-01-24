@@ -77,11 +77,12 @@ class LossAcc:
             self.pop(t)
 
     def pop(self, t):
-        self.__losses.append(self.group_acc / self.group_size)
-        self.__time.append(t)
-        self.group_acc = 0
-        self.group_size = 0
-        self.n_groups += 1
+        if self.group_size:
+            self.__losses.append(self.group_acc / self.group_size)
+            self.__time.append(t)
+            self.group_acc = 0
+            self.group_size = 0
+            self.n_groups += 1
     
     def getHistory(self):
         assert self.batch_size == 0
