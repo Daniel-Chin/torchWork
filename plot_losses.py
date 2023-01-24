@@ -33,8 +33,8 @@ class LossType:
         )
     
     def prettify(self, x: str, /):
-        x = x.replace('_', ' ')
-        return '\n'.join(rollText(x, 20))
+        x = x.replace('_', ' ').replace('.', ' ')
+        return '\n'.join(rollText(x, 17))
     
     def __hash__(self):
         return hash(self.display_name)
