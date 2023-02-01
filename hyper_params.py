@@ -54,7 +54,11 @@ class BaseHyperParams:
             if all([
                 type(x) in __class__.TYPES_IMMUTABLE for x in v
             ]):
-                return True, v.copy()
+                if _type is list:
+                    return True, v.copy()
+                if _type is tuple:
+                    return True, v
+            print('Debug trg3t3sff4af3eh983')
             from console import console
             console({**globals(), **locals()})
         raise TypeError(
