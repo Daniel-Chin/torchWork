@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Callable, List, Optional, Union
+from copy import deepcopy
 
 import torch
 
@@ -64,11 +65,11 @@ class LossWeightTree:
         for child in self.children or []:
             child.print(depth + 1)
 
-    def copy(self):
+    def __deepcopy__(self, memo):
         if self.children is None:
             children = None
         else:
-            children = [x.copy() for x in self.children]
+            children = [deepcopy(x, memo) for x in self.children]
         return __class__(self.name, self.weight, children)
     
     def errorAboutWeight(*_):
