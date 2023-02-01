@@ -41,6 +41,8 @@ class BaseHyperParams:
         '''
         returns `(do_copy, value_copied)`  
         '''
+        if v is None:
+            return True, None
         if k.startswith('_') or callable(v):
             return False, None
         _type = type(v)
