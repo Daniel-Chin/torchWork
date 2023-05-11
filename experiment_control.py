@@ -16,7 +16,7 @@ import git
 
 EXPERIMENT_PY_FILENAME = 'experiment.py'
 
-class ExperimentGroup(ABC):
+class BaseExperimentGroup(ABC):
     def __init__(self, hyperParams: BaseHyperParams) -> None:
         self.hyperParams = hyperParams
     
@@ -60,7 +60,7 @@ class Trainer:
     
     @staticmethod
     def loadFromDisk(
-        group: ExperimentGroup, 
+        group: BaseExperimentGroup, 
         modelClasses: Dict[str, Type[nn.Module]], 
         trainer_path, trainer_name, rand_init_i, 
         lock_epoch: Optional[int] = None, 
@@ -89,7 +89,7 @@ def roundRobinSched(n_workers):
         ages[elected] += end - start
 
 def loadExperiment(experiment_py_path) -> Tuple[
-    str, int, List[ExperimentGroup], Any, 
+    str, int, List[BaseExperimentGroup], Any, 
 ]:
     spec = importlib.util.spec_from_file_location(
         "experiment", experiment_py_path, 
@@ -218,7 +218,7 @@ def saveModels(models: Dict[str, List[nn.Module]], epoch, save_path):
             ))
 
 def loadLatestModels(
-    experiment_path: str, group: ExperimentGroup, 
+    experiment_path: str, group: BaseExperimentGroup, 
     rand_init_i: int, 
     modelClasses: Dict[str, Tuple[Type[nn.Module], int]], 
     lock_epoch: Optional[int]=None, verbose: bool=True, 

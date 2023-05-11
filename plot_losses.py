@@ -18,7 +18,7 @@ except ImportError as e:
         input('Press Enter to quit...')
     raise e
 
-from torchWork.experiment_control import loadExperiment, getTrainerPath, ExperimentGroup
+from torchWork.experiment_control import loadExperiment, getTrainerPath, BaseExperimentGroup
 from torchWork.loss_logger import Decompressor, LOSS_FILE_NAME
 
 class LossType:
@@ -106,7 +106,7 @@ def PlotLosses(
         group_stop = None
     else:
         group_stop = stop // average_over
-    data: List[Tuple[int, ExperimentGroup, int, Dict[LossType, LossAcc]]] = []
+    data: List[Tuple[int, BaseExperimentGroup, int, Dict[LossType, LossAcc]]] = []
     for (group_i, group), rand_init_i in tqdm([*itertools.product(
         enumerate(groups), range(n_rand_inits), 
     )]):

@@ -7,7 +7,7 @@ from torchWork.loss_logger import LossLogger
 from torchWork.hyper_params import BaseHyperParams
 from torchWork.profiler import Profiler
 from torchWork.experiment_control import (
-    ExperimentGroup, runExperiment, loadExperiment, 
+    BaseExperimentGroup, runExperiment, loadExperiment, 
     saveModels, loadLatestModels, 
 )
 from torchWork.plot_losses import PlotLosses
